@@ -27,7 +27,7 @@ body {
 
 #nav .activate {
     font-weight: bold;
-    border-bottom: #000000 solid 3px;
+    border-bottom: #000 solid 3px;
 }
 
 .container {
@@ -37,6 +37,6 @@ body {
     width: 100%;
 }
 
-#mission_container {
-    padding: 10px;
+#mission_search_box {
+    margin: 10px 10px 0 10px;
 }

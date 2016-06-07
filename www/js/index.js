@@ -19,7 +19,7 @@ var app = {
             app.map.geolocation.watchPosition();
             AMap.event.addListener(app.map.geolocation, 'complete', function(result) {
                 if (app.map.geolocation.firstFix) {
-                    app.map.setZoomAndCenter(15, result.position);
+                    app.map.setZoomAndCenter(16, result.position);
                     app.map.geolocation.firstFix = false;
                 }
             });
@@ -36,6 +36,7 @@ var app = {
 };
 
 $(function() {
+    // init nav bar
     $('#nav').find('div').tap(function() {
         if ($(this).hasClass('activate')) return;
         $('#nav').find('div').removeClass('activate');
@@ -53,5 +54,21 @@ $(function() {
                 break;
         }
     });
+    // init mission search
+    $('#btn_mission_search').tap(function() {
+        $('#mission_list').html('Loading…');
+        $.getJSON('http://ingressmm.com/get_mission.php?find='+$('#input_mission_name').val()+'&findby=0', function(result) {
+            var content = '';
+            for (var key in result.mission) {
+                var mission = result.mission[key];
+                content = content + '<strong>' + mission.name + '</strong><br />';
+            }
+            if (result.mission.length == 0) {
+                content = 'No result';
+            }
+            $('#mission_list').html(content);
+        });
+    });
+    // init app
     app.initialize();
 });
