@@ -21,23 +21,23 @@
     <title>AQMissionHelper</title>
     <script type="text/javascript" src="cordova.js"></script>
     <script type="text/javascript" src="http://webapi.amap.com/maps?v=1.3&key=b6204dad0365ff1af7b46fb2ebed01c5"></script>
+    <script type="text/javascript" src="js/jquery.min.js"></script>
+    <script type="text/javascript" src="js/jquery.mobile.custom.min.js"></script>
     <script type="text/javascript" src="js/index.js"></script>
 </head>
 
 <body>
     <div id="nav">
-        <div id="nav_map" class="activated">Map</div>
+        <div id="nav_map" class="activate">Map</div>
         <div id="nav_mission">Mission</div>
         <div id="nav_route">Route</div>
     </div>
     <div id="map_container" class="container"></div>
     <div id="mission_container" class="container hidden">
-
+        <input id="mission_search" />
+        <button id="btn_mission_search">Search</button>
     </div>
     <div id="route_container" class="container hidden"></div>
-    <script type="text/javascript">
-        app.initialize();
-    </script>
 </body>
 
 </html>

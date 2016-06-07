@@ -34,3 +34,24 @@ var app = {
 
     }
 };
+
+$(function() {
+    $('#nav').find('div').tap(function() {
+        if ($(this).hasClass('activate')) return;
+        $('#nav').find('div').removeClass('activate');
+        $(this).addClass('activate');
+        $('.container').hide();
+        switch ($(this).attr('id')) {
+            case 'nav_map':
+                $('#map_container').show();
+                break;
+            case 'nav_mission':
+                $('#mission_container').show();
+                break;
+            case 'nav_route':
+                $('#route_container').show();
+                break;
+        }
+    });
+    app.initialize();
+});
