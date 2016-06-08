@@ -11,10 +11,16 @@ body {
     -webkit-text-size-adjust: none;             /* prevent webkit from resizing text to fit */
     -webkit-user-select: none;                  /* prevent copy paste, to allow, change 'none' to 'text' */
     margin: 0;
+    font-family: sans-serif;
 }
 
 #nav {
+    position: fixed;
+    top: 0;
+    width: 100%;
     height: 40px;
+    z-index: 999;
+    background-color: #ffffff;
     display: -webkit-box;
     -webkit-box-orient: horizontal;
 }
@@ -41,12 +47,8 @@ body {
 }
 
 #mission_container {
-    margin: 0 20px;
+    margin: 10px 20px 0 20px;
     word-break: break-all;
-}
-
-#mission_search_box {
-    margin-top: 10px;
 }
 
 .mission {
@@ -54,6 +56,7 @@ body {
     position: relative;
     padding-left: 56px;
     line-height: 24px;
+    min-height: 48px;
 }
 
 .mission_icon {
@@ -69,5 +72,13 @@ body {
 }
 
 .mission_title {
+    font-weight: bold;
+}
+
+.waypoint {
+    margin-top: 10px;
+}
+
+.waypoint_name {
     font-weight: bold;
 }

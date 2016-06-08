@@ -32,23 +32,29 @@
         <div id="nav_mission">Mission</div>
         <div id="nav_route">Route</div>
     </div>
-    <div id="map_container" class="container hidden"></div>
-    <div id="mission_container" class="container">
-        <div id="mission_search_box">
-            Name: <input id="input_mission_name" />
-            <button id="btn_mission_search">Search</button>
+    <div id="map_container" class="container">
+    </div>
+    <div id="mission_container" class="container hidden">
+        <div id="mission_search">
+            <div id="mission_search_box">
+                Name: <input id="input_mission_name" />
+                <button id="btn_mission_search">Search</button>
+            </div>
+            <div id="mission_list">
+            </div>
         </div>
-        <div id="mission_list">
-            <div class="mission">
-                <div class="mission_icon">
-                    <img src="https://lh3.googleusercontent.com/DpQiOlGAEj4bRiEB3TbZWvd55w6MDMB2PdWGCtEenDi4ZTf6S01Css9Fde3O-zuPeOTy7j-Cb4orwLe9JUXK" />
-                </div>
-                <div class="mission_title">Welcome to Nanjing 01</div>
-                <div>Seq 15min 1024m</div>
+        <div id="mission_detail" class="hidden">
+            <div>
+                <button id="btn_detail_back">Go back</button>
+                <button id="btn_show_map" class="hidden">Show in map</button>
+            </div>
+            <div id="mission_detail_info" class="mission"></div>
+            <div id="mission_detail_waypoints">
             </div>
         </div>
     </div>
-    <div id="route_container" class="container hidden"></div>
+    <div id="route_container" class="container hidden">
+    </div>
 </body>
 
 </html>
