@@ -58,15 +58,20 @@ $(function() {
     $('#btn_mission_search').tap(function() {
         $('#mission_list').html('Loading…');
         $.getJSON('http://ingressmm.com/get_mission.php?find='+$('#input_mission_name').val()+'&findby=0', function(result) {
-            var content = '';
-            for (var key in result.mission) {
-                var mission = result.mission[key];
-                content = content + '<strong>' + mission.name + '</strong><br />';
-            }
+            $('#mission_list').html('');
             if (result.mission.length == 0) {
-                content = 'No result';
+                $('#mission_list').html('No Result');
+            } else for (var key in result.mission) {
+                var mission = result.mission[key];
+                var sequence = '';
+                if (mission.sequence == '1') {
+                    sequence = 'Seq';
+                } else if (mission.sequence == '2') {
+                    sequence = 'Any';
+                }
+                var content = '<div id="mission_list"><div class="mission"><div class="mission_icon"><img src="' + mission.icon +'" /></div><div class="mission_title">' + mission.name + '</div><div>' + sequence + '</div></div></div>';
+                $('#mission_list').append(content);
             }
-            $('#mission_list').html(content);
         });
     });
     // init app

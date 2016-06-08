@@ -34,9 +34,40 @@ body {
     position: absolute;
     top: 40px;
     bottom: 0;
+}
+
+#map_container {
     width: 100%;
 }
 
+#mission_container {
+    margin: 0 20px;
+    word-break: break-all;
+}
+
 #mission_search_box {
-    margin: 10px 10px 0 10px;
+    margin-top: 10px;
+}
+
+.mission {
+    margin-top: 10px;
+    position: relative;
+    padding-left: 56px;
+    line-height: 24px;
+}
+
+.mission_icon {
+    position: absolute;
+    top: 0;
+    left: 0;
+}
+
+.mission_icon > img {
+    width: 48px;
+    height: 48px;
+    border-radius: 24px;
+}
+
+.mission_title {
+    font-weight: bold;
 }
