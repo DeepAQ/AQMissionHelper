@@ -58,32 +58,35 @@ var app = {
         });
         app.map.markers = [];
         // init geolocation
-        app.map.plugin('AMap.Geolocation', function() {
-            app.geolocation = new AMap.Geolocation({
-                enableHighAccuracy: true,
-                timeout: 5000,
-                buttonPosition: 'RT',
-                showCircle: false,
-                panToLocation: false
-            });
-            app.map.addControl(app.geolocation);
-            app.geolocation.firstFix = true;
-            app.geolocation.watchPosition();
-            AMap.event.addListener(app.geolocation, 'complete', function(result) {
-                app.geolocation.position = result.position;
-                app.calcDistance();
-                if (app.geolocation.firstFix) {
-                    app.map.setZoomAndCenter(16, result.position);
-                    app.geolocation.firstFix = false;
-                }
-            });
+        app.location = {};
+        app.location.circle = new AMap.Marker({
+            map: app.map,
+            offset: new AMap.Pixel(-11.5, -11.5),
+            icon: 'http://webapi.amap.com/theme/v1.3/markers/n/loc.png',
+            zIndex: 200,
+            visible: false
         });
+        app.location.firstFix = true;
+    },
+
+    updateLocation: function(lat, lng) {
+        app.location.lat = lat;
+        app.location.lng = lng;
+        app.calcDistance();
+        app.location.gcjPos = new WGS84transformer().transform(lat, lng);
+        app.location.circle.setPosition([app.location.gcjPos.lng, app.location.gcjPos.lat]);
+        app.location.circle.show();
+        if (app.location.firstFix) {
+            app.map.setZoomAndCenter(16, [app.location.gcjPos.lng, app.location.gcjPos.lat]);
+            app.location.firstFix = false;
+        }
     },
 
     calcDistance: function() {
         $('.distance').each(function() {
-            var newpos = new WGS84transformer().transform(Number($(this).attr('data:lat')), Number($(this).attr('data:lng')));
-            $(this).html(Math.ceil(app.geolocation.position.distance([newpos.lng, newpos.lat])) + 'm');
+            var lat = Number($(this).attr('data:lat'));
+            var lng = Number($(this).attr('data:lng'));
+            $(this).html(Math.ceil(new AMap.LngLat(lng, lat).distance([app.location.lng, app.location.lat])) + 'm');
         });
     },
 
@@ -92,7 +95,24 @@ var app = {
     // The scope of 'this' is the event. In order to call the 'receivedEvent'
     // function, we must explicitly call 'app.receivedEvent(...);'
     onDeviceReady: function() {
-
+        if (window.AMapBridge) {
+            // For Android
+            app.amapUpdate = function() {
+                AMapBridge.getLocation(function(result) {
+                    if (result == "") return;
+                    app.updateLocation(result.lat, result.lng);
+                    setTimeout(app.amapUpdate, 2000);
+                });
+            };
+            app.amapUpdate();
+        } else {
+            app.location.watch = navigator.geolocation.watchPosition(function(result) {
+                if (result.coords.accuracy = null) return;
+                app.updateLocation(result.coords.latitude, result.coords.longitude);
+            }, null, {
+                enableHighAccuracy: true
+            });
+        }
     }
 };
 
@@ -218,19 +238,23 @@ $(function() {
             switch (_this.html()) {
                 case 'Walk':
                     app.transport = new AMap.Walking(param);
+                    $('#nav_map').tap();
                     break;
                 case 'Drive':
                     app.transport = new AMap.Driving(param);
+                    $('#nav_route').tap();
                     break;
                 case 'Transit':
                     app.transport = new AMap.Transfer(param);
+                    $('#nav_route').tap();
                     break;
             }
             var target = _this.parent().find('.distance');
             var target_pos = new WGS84transformer().transform(Number(target.attr('data:lat')), Number(target.attr('data:lng')));
-            app.transport.search(app.geolocation.position, [target_pos.lng, target_pos.lat]);
+            app.transport.search([app.location.gcjPos.lng, app.location.gcjPos.lat], [target_pos.lng, target_pos.lat]);
         });
     });
+
     // init app
     app.initialize();
 });

@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<plugin xmlns="http://apache.org/cordova/ns/plugins/1.0"
+        id="cordova-plugin-amapBridge" version="0.0.1">
+
+    <name>AMap Bridge</name>
+    <description>AMap Bridge</description>
+    <keywords>cordova</keywords>
+
+    <js-module src="www/AMapBridge.js" name="AndroidCallJS">
+        <clobbers target="AndroidCallJS" />
+    </js-module>
+
+    <platform name="android">
+        <config-file target="res/xml/config.xml" parent="/*">
+            <feature name="AMapBridge">
+                <param name="android-package" value="cn.imaq.missionhelper.AMapBridge" />
+            </feature>
+        </config-file>
+
+        <source-file src="src/android/AMapBridge.java" target-dir="src/cn/imaq/missionhelper" />
+    </platform>
+
+</plugin>
