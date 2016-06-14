@@ -47,6 +47,8 @@ WGS84transformer.prototype.transformLng = function(x, y) {
 };
 /////////// end WGS84 to GCJ-02 transformer /////////
 
+var wgstogcj = new WGS84transformer();
+
 var app = {
     // Application Constructor
     initialize: function() {
@@ -73,11 +75,10 @@ var app = {
         app.location.lat = lat;
         app.location.lng = lng;
         app.calcDistance();
-        app.location.gcjPos = new WGS84transformer().transform(lat, lng);
-        app.location.circle.setPosition([app.location.gcjPos.lng, app.location.gcjPos.lat]);
+        app.location.circle.setPosition([lng, lat]);
         app.location.circle.show();
         if (app.location.firstFix) {
-            app.map.setZoomAndCenter(16, [app.location.gcjPos.lng, app.location.gcjPos.lat]);
+            app.map.setZoomAndCenter(16, [lng, lat]);
             app.location.firstFix = false;
         }
     },
@@ -108,7 +109,8 @@ var app = {
         } else {
             app.location.watch = navigator.geolocation.watchPosition(function(result) {
                 if (result.coords.accuracy = null) return;
-                app.updateLocation(result.coords.latitude, result.coords.longitude);
+                var pos = wgstogcj.transform(result.coords.latitude, result.coords.longitude);
+                app.updateLocation(pos.lat, pos.lng);
             }, null, {
                 enableHighAccuracy: true
             });
@@ -150,7 +152,8 @@ $(function() {
                 } else if (mission.sequence == '2') {
                     sequence = 'Any';
                 }
-                var content = '<div class="mission" data:missionid="' + mission.id + '"><div class="mission_icon"><img src="http://ingressmm.com/icon/' + mission.code + '.jpg" /></div><div class="mission_title">' + mission.name + '</div><div>' + sequence + ' <span class="distance" data:lat="' + mission.latitude + '" data:lng="' + mission.longitude + '"></span></div></div>';
+                var gcjPos = wgstogcj.transform(mission.latitude, mission.longitude);
+                var content = '<div class="mission" data:missionid="' + mission.id + '"><div class="mission_icon"><img src="http://ingressmm.com/icon/' + mission.code + '.jpg" /></div><div class="mission_title">' + mission.name + '</div><div>' + sequence + ' <span class="distance" data:lat="' + gcjPos.lat + '" data:lng="' + gcjPos.lng + '"></span></div></div>';
                 $('#mission_list').append(content);
             }
             app.calcDistance();
@@ -189,7 +192,8 @@ $(function() {
                     "Enter the Passphrase"
                 ];
                 if (!waypoint[0]) {
-                    content = content + '<div>' + task_list[waypoint[1]] + '</div>' + '<div><span class="distance" data:lat="' + waypoint[2].latitude + '" data:lng="' + waypoint[2].longitude + '"></span> <a href="javascript:">Walk</a> <a href="javascript:">Drive</a> <a href="javascript:">Transit</a></div>';
+                    var gcjPos = wgstogcj.transform(waypoint[2].latitude, waypoint[2].longitude);
+                    content = content + '<div>' + task_list[waypoint[1]] + '</div>' + '<div><span class="distance" data:lat="' + gcjPos.lat + '" data:lng="' + gcjPos.lng + '"></span> <a href="javascript:">Walk</a> <a href="javascript:">Drive</a> <a href="javascript:">Transit</a></div>';
                 }
                 content = content + '</div>';
                 $('#mission_detail_waypoints').append(content);
@@ -250,8 +254,8 @@ $(function() {
                     break;
             }
             var target = _this.parent().find('.distance');
-            var target_pos = new WGS84transformer().transform(Number(target.attr('data:lat')), Number(target.attr('data:lng')));
-            app.transport.search([app.location.gcjPos.lng, app.location.gcjPos.lat], [target_pos.lng, target_pos.lat]);
+            var target_pos = [Number(target.attr('data:lng')), Number(target.attr('data:lat'))];
+            app.transport.search([app.location.lng, app.location.lat], target_pos);
         });
     });
 
