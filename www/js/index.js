@@ -171,7 +171,6 @@ $(function() {
         //alert($(this).attr('data:missionid'));
         $('#mission_detail_info').html($(this).html());
         $('#mission_search_box').hide();
-        $('#mission_list').show();
         $('#mission_list').hide();
         $('#mission_detail').show();
         $('#btn_show_map').hide();
