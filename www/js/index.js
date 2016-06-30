@@ -52,7 +52,15 @@ var wgstogcj = new WGS84transformer();
 var app = {
     // Application Constructor
     initialize: function() {
-        document.addEventListener('deviceready', this.onDeviceReady, false);
+        app.location = {};
+        if (window.location.href.substr(0, 4) == 'http') {
+            // online version
+            this.onDeviceReady();
+            app.datasrc = '.';
+        } else {
+            document.addEventListener('deviceready', this.onDeviceReady, false);
+            app.datasrc = 'http://ingressmm.com';
+        }
         // init map view
         app.map = new AMap.Map('map_container');
         app.map.plugin('AMap.Scale', function() {
@@ -60,7 +68,6 @@ var app = {
         });
         app.map.markers = [];
         // init geolocation
-        app.location = {};
         app.location.circle = new AMap.Marker({
             map: app.map,
             offset: new AMap.Pixel(-11.5, -11.5),
@@ -161,11 +168,13 @@ $(function() {
                 break;
         }
     });
+    
     // init mission search
     $('#btn_mission_search').tap(function() {
         $('#mission_list').show();
-        app.loadlist('http://ingressmm.com/get_mission.php?find='+$('#input_mission_name').val()+'&findby=0');
+        app.loadlist(app.datasrc+'/get_mission.php?find='+$('#input_mission_name').val()+'&findby=0');
     });
+    
     // init mission list
     $('#mission_list').on('tap', '.mission', function() {
         //alert($(this).attr('data:missionid'));
@@ -175,7 +184,7 @@ $(function() {
         $('#mission_detail').show();
         $('#btn_show_map').hide();
         $('#mission_detail_waypoints').html('Loading mission waypoints…');
-        $.getJSON('http://ingressmm.com/get_portal.php?mission='+$(this).attr('data:missionid'), function(result) {
+        $.getJSON(app.datasrc+'/get_portal.php?mission='+$(this).attr('data:missionid'), function(result) {
             $('#mission_detail_waypoints').html('');
             app.current_mission = result;
             if (result.portal.length == 0) {
@@ -226,6 +235,7 @@ $(function() {
             }
         });
     });
+    
     // init mission detail
     $('#btn_detail_back').tap(function() {
         if (app.transport) {
@@ -235,9 +245,11 @@ $(function() {
         $('#mission_search_box').show();
         $('#mission_list').show();
     });
+    
     $('#btn_show_map').tap(function() {
         $('#nav_map').tap();
     });
+    
     $('#mission_detail_waypoints').on('tap', 'a', function() {
         var _this = $(this);
         AMap.service(['AMap.Walking', 'AMap.Driving', 'AMap.Transfer'], function() {
