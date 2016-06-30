@@ -51,6 +51,12 @@ body {
     word-break: break-all;
 }
 
+.suggest_title {
+    font-size: 20px;
+    font-weight: bold;
+    margin-top: 20px;
+}
+
 .mission {
     margin-top: 10px;
     position: relative;

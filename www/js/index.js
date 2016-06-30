@@ -71,6 +71,30 @@ var app = {
         app.location.firstFix = true;
     },
 
+    loadlist: function(url) {
+        $('#mission_suggest').hide();
+        $('#mission_list').show();
+        $('#mission_list_content').html('Loading…');
+        $.getJSON(url, function(result) {
+            $('#mission_list_content').html('');
+            if (result.mission.length == 0) {
+                $('#mission_list_content').html('No Result');
+            } else for (var key in result.mission) {
+                var mission = result.mission[key];
+                var sequence = '';
+                if (mission.sequence == '1') {
+                    sequence = 'Seq';
+                } else if (mission.sequence == '2') {
+                    sequence = 'Any';
+                }
+                var gcjPos = wgstogcj.transform(mission.latitude, mission.longitude);
+                var content = '<div class="mission" data:missionid="' + mission.id + '"><div class="mission_icon"><img src="http://ingressmm.com/icon/' + mission.code + '.jpg" /></div><div class="mission_title">' + mission.name + '</div><div>' + sequence + ' <span class="distance" data:lat="' + gcjPos.lat + '" data:lng="' + gcjPos.lng + '"></span></div></div>';
+                $('#mission_list_content').append(content);
+            }
+            app.calcDistance();
+        });
+    },
+
     updateLocation: function(lat, lng) {
         app.location.lat = lat;
         app.location.lng = lng;
@@ -139,31 +163,16 @@ $(function() {
     });
     // init mission search
     $('#btn_mission_search').tap(function() {
-        $('#mission_list').html('Loading…');
-        $.getJSON('http://ingressmm.com/get_mission.php?find='+$('#input_mission_name').val()+'&findby=0', function(result) {
-            $('#mission_list').html('');
-            if (result.mission.length == 0) {
-                $('#mission_list').html('No Result');
-            } else for (var key in result.mission) {
-                var mission = result.mission[key];
-                var sequence = '';
-                if (mission.sequence == '1') {
-                    sequence = 'Seq';
-                } else if (mission.sequence == '2') {
-                    sequence = 'Any';
-                }
-                var gcjPos = wgstogcj.transform(mission.latitude, mission.longitude);
-                var content = '<div class="mission" data:missionid="' + mission.id + '"><div class="mission_icon"><img src="http://ingressmm.com/icon/' + mission.code + '.jpg" /></div><div class="mission_title">' + mission.name + '</div><div>' + sequence + ' <span class="distance" data:lat="' + gcjPos.lat + '" data:lng="' + gcjPos.lng + '"></span></div></div>';
-                $('#mission_list').append(content);
-            }
-            app.calcDistance();
-        });
+        $('#mission_list').show();
+        app.loadlist('http://ingressmm.com/get_mission.php?find='+$('#input_mission_name').val()+'&findby=0');
     });
     // init mission list
     $('#mission_list').on('tap', '.mission', function() {
         //alert($(this).attr('data:missionid'));
         $('#mission_detail_info').html($(this).html());
-        $('#mission_search').hide();
+        $('#mission_search_box').hide();
+        $('#mission_list').show();
+        $('#mission_list').hide();
         $('#mission_detail').show();
         $('#btn_show_map').hide();
         $('#mission_detail_waypoints').html('Loading mission waypoints…');
@@ -200,6 +209,22 @@ $(function() {
             }
             $('#btn_show_map').show();
             app.calcDistance();
+            app.map.remove(app.map.markers);
+            for (var i = 0; i < app.current_mission.portal.length; i++) {
+                var waypoint = app.current_mission.portal[i];
+                if (waypoint[0]) continue;
+                var newpos = new WGS84transformer().transform(waypoint[2].latitude, waypoint[2].longitude);
+                var marker = new AMap.Marker({
+                    map: app.map,
+                    position: [newpos.lng, newpos.lat],
+                    offset: new AMap.Pixel(-16, -16),
+                    icon: 'https://ingressmm.com/img/p' + (Array(2).join(0)+(i+1)).slice(-2) + 'n.png'
+                });
+                app.map.markers.push(marker);
+                if (i == 0) {
+                    app.map.setZoomAndCenter(16, [newpos.lng, newpos.lat]);
+                }
+            }
         });
     });
     // init mission detail
@@ -208,25 +233,10 @@ $(function() {
             app.transport.clear();
         }
         $('#mission_detail').hide();
-        $('#mission_search').show();
+        $('#mission_search_box').show();
+        $('#mission_list').show();
     });
     $('#btn_show_map').tap(function() {
-        app.map.remove(app.map.markers);
-        for (var i = 0; i < app.current_mission.portal.length; i++) {
-            var waypoint = app.current_mission.portal[i];
-            if (waypoint[0]) continue;
-            var newpos = new WGS84transformer().transform(waypoint[2].latitude, waypoint[2].longitude);
-            var marker = new AMap.Marker({
-                map: app.map,
-                position: [newpos.lng, newpos.lat],
-                offset: new AMap.Pixel(-16, -16),
-                icon: 'https://ingressmm.com/img/p' + (Array(2).join(0)+(i+1)).slice(-2) + 'n.png'
-            });
-            app.map.markers.push(marker);
-            if (i == 0) {
-                app.map.setZoomAndCenter(16, [newpos.lng, newpos.lat]);
-            }
-        }
         $('#nav_map').tap();
     });
     $('#mission_detail_waypoints').on('tap', 'a', function() {
