@@ -42,7 +42,7 @@ body {
     bottom: 0;
 }
 
-#map_container {
+#map_container, #route_container {
     width: 100%;
 }
 
@@ -55,6 +55,10 @@ body {
     font-size: 20px;
     font-weight: bold;
     margin-top: 20px;
+}
+
+#mission_list {
+    margin-top: 10px;
 }
 
 .mission {

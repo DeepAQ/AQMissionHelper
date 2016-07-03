@@ -16,7 +16,9 @@
     * Create your own at http://cspisawesome.com
     -->
     <!-- <meta http-equiv="Content-Security-Policy" content="default-src 'self' data: gap: 'unsafe-inline' https://ssl.gstatic.com; style-src 'self' 'unsafe-inline'; media-src *" /> -->
-
+    <meta name="apple-mobile-web-app-capable" content="yes">
+	<meta name="apple-mobile-web-app-status-bar-style" content="white">
+	<link rel="apple-touch-icon" href="res/icon/android/drawable-xxxhdpi-icon.png">
     <link rel="stylesheet" type="text/css" href="css/index.css" />
     <title>AQMissionHelper</title>
     <script type="text/javascript" src="cordova.js"></script>
@@ -46,7 +48,8 @@
             <div>test</div>
         </div>
         <div id="mission_list" class="hidden">
-            <button id="btn_list_back">Go back</button>
+            <button id="btn_list_back">Hide results</button>
+            <button id="btn_list_save">Save search</button>
             <div id="mission_list_content">
             </div>
         </div>

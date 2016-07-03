@@ -176,6 +176,11 @@ $(function() {
     });
     
     // init mission list
+    $('#btn_list_back').tap(function() {
+        $('#mission_list').hide();
+        $('#mission_suggest').show();
+    });
+
     $('#mission_list').on('tap', '.mission', function() {
         //alert($(this).attr('data:missionid'));
         $('#mission_detail_info').html($(this).html());
