@@ -76,6 +76,7 @@ var app = {
             visible: false
         });
         app.location.firstFix = true;
+        app.loadSaved();
     },
 
     loadlist: function(url) {
@@ -120,6 +121,18 @@ var app = {
             var lng = Number($(this).attr('data:lng'));
             $(this).html(Math.ceil(new AMap.LngLat(lng, lat).distance([app.location.lng, app.location.lat])) + 'm');
         });
+    },
+    
+    loadSaved: function() {
+        $('#saved_list').html('No saved searches');
+        if (!localStorage.saved_search) return;
+        try {
+            var saved = JSON.parse(localStorage.saved_search);
+            $('#saved_list').html('');
+            for (var key in saved) {
+                $('#saved_list').append('<div data:name="'+saved[key]+'" data:key="'+key+'"><a href="javascript:">'+key+'</a> <a href="javascript:">[Delete]</a></div>');
+            }
+        } catch (e) {}
     },
 
     // deviceready Event Handler
@@ -172,13 +185,43 @@ $(function() {
     // init mission search
     $('#btn_mission_search').tap(function() {
         $('#mission_list').show();
+        $('#btn_list_save').show();
         app.loadlist(app.datasrc+'/get_mission.php?find='+$('#input_mission_name').val()+'&findby=0');
+    });
+
+    $('#saved_list').on('tap', 'a:nth-child(1)', function() {
+        var name = $(this).parent().attr('data:name');
+        $('#input_mission_name').val(name);
+        $('#btn_mission_search').tap();
+    }).on('click', 'a:nth-child(2)', function() {
+        var key = $(this).parent().attr('data:key');
+        try {
+            var saved = JSON.parse(localStorage.saved_search);
+            delete saved[key];
+            localStorage.saved_search = JSON.stringify(saved);
+        } catch (e) {}
+        app.loadSaved();
     });
     
     // init mission list
     $('#btn_list_back').tap(function() {
+        $('#btn_list_save').hide();
         $('#mission_list').hide();
         $('#mission_suggest').show();
+    });
+
+    $('#btn_list_save').click(function() {
+        var name = prompt("Save as :", $('#input_mission_name').val());
+        if (name == null) return;
+        var data = {};
+        if (localStorage.saved_search) {
+            try {
+                data = JSON.parse(localStorage.saved_search);
+            } catch (e) {}
+        }
+        data[name] = $('#input_mission_name').val();
+        localStorage.saved_search = JSON.stringify(data);
+        app.loadSaved();
     });
 
     $('#mission_list').on('tap', '.mission', function() {
@@ -242,7 +285,7 @@ $(function() {
     });
     
     // init mission detail
-    $('#btn_detail_back').tap(function() {
+    $('#btn_detail_back').click(function() {
         if (app.transport) {
             app.transport.clear();
         }
