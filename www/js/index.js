@@ -130,7 +130,7 @@ var app = {
             var saved = JSON.parse(localStorage.saved_search);
             $('#saved_list').html('');
             for (var key in saved) {
-                $('#saved_list').append('<div data:name="'+saved[key]+'" data:key="'+key+'"><a href="javascript:">'+key+'</a> <a href="javascript:">[Delete]</a></div>');
+                $('#saved_list').prepend('<div data:name="'+saved[key]+'" data:key="'+key+'"><a href="javascript:">'+key+'</a> <a href="javascript:">[Delete]</a></div>');
             }
         } catch (e) {}
     },
@@ -194,12 +194,14 @@ $(function() {
         $('#input_mission_name').val(name);
         $('#btn_mission_search').tap();
     }).on('click', 'a:nth-child(2)', function() {
-        var key = $(this).parent().attr('data:key');
-        try {
-            var saved = JSON.parse(localStorage.saved_search);
-            delete saved[key];
-            localStorage.saved_search = JSON.stringify(saved);
-        } catch (e) {}
+        if (confirm("Sure to delete?")) {
+            var key = $(this).parent().attr('data:key');
+            try {
+                var saved = JSON.parse(localStorage.saved_search);
+                delete saved[key];
+                localStorage.saved_search = JSON.stringify(saved);
+            } catch (e) {}
+        }
         app.loadSaved();
     });
     
