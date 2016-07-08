@@ -77,6 +77,7 @@ var app = {
         });
         app.location.firstFix = true;
         app.loadSaved();
+        app.loadTrending();
     },
 
     loadlist: function(url) {
@@ -133,6 +134,10 @@ var app = {
                 $('#saved_list').prepend('<div data:name="'+saved[key]+'" data:key="'+key+'"><a href="javascript:">'+key+'</a> <a href="javascript:">[Delete]</a></div>');
             }
         } catch (e) {}
+    },
+
+    loadTrending: function() {
+        $.getScript('http://imaq.cn/mission/trending.aq');
     },
 
     // deviceready Event Handler
