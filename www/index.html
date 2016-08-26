@@ -1,3 +1,4 @@
+<!DOCTYPE html>
 <html>
 
 <head>
@@ -5,17 +6,6 @@
     <meta name="format-detection" content="telephone=no" />
     <meta name="msapplication-tap-highlight" content="no" />
     <meta name="viewport" content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1, width=device-width" />
-    <!-- This is a wide open CSP declaration. To lock this down for production, see below. -->
-    <!-- <meta http-equiv="Content-Security-Policy" content="default-src * 'unsafe-inline'; style-src 'self' 'unsafe-inline'; media-src *" /> -->
-    <!-- Good default declaration:
-    * gap: is required only on iOS (when using UIWebView) and is needed for JS->native communication
-    * https://ssl.gstatic.com is required only on Android and is needed for TalkBack to function properly
-    * Disables use of eval() and inline scripts in order to mitigate risk of XSS vulnerabilities. To change this:
-        * Enable inline JS: add 'unsafe-inline' to default-src
-        * Enable eval(): add 'unsafe-eval' to default-src
-    * Create your own at http://cspisawesome.com
-    -->
-    <!-- <meta http-equiv="Content-Security-Policy" content="default-src 'self' data: gap: 'unsafe-inline' https://ssl.gstatic.com; style-src 'self' 'unsafe-inline'; media-src *" /> -->
     <meta name="apple-mobile-web-app-capable" content="yes">
 	<meta name="apple-mobile-web-app-status-bar-style" content="white">
 	<link rel="apple-touch-icon" href="res/icon/android/drawable-xxxhdpi-icon.png">
@@ -29,39 +19,42 @@
 </head>
 
 <body>
-    <div id="nav">
-        <div id="nav_map" class="activate">Map</div>
-        <div id="nav_mission">Mission</div>
-        <div id="nav_route">Route</div>
-    </div>
+    <nav>
+        <section data:item="map" class="activate">Map</section>
+        <section data:item="mission">Mission</section>
+        <section data:item="route">Route</section>
+    </nav>
     <div id="map_container" class="container">
     </div>
     <div id="mission_container" class="container hidden">
-        <div id="mission_search_box">
-            Name: <input id="input_mission_name" />
-            <button id="btn_mission_search">Search</button>
-        </div>
-        <div id="mission_suggest">
-            <div class="suggest_title">Saved searches</div>
+        <section id="mission_search_box">
+            <select title="Find by">
+                <option>Name</option>
+            </select>
+            <input title="Keyword" />
+            <button>Search</button>
+        </section>
+        <section id="mission_suggest">
+            <section>Saved searches</section>
             <div id="saved_list"></div>
-            <div class="suggest_title">Trending</div>
+            <section>Trending</section>
             <div id="trending_list">Nothing right now!</div>
-        </div>
-        <div id="mission_list" class="hidden">
-            <button id="btn_list_back">Hide results</button>
+        </section>
+        <section id="mission_list" class="hidden">
+            <button id="btn_list_back">Hide List</button>
             <button id="btn_list_save" class="hidden">Save search</button>
             <div id="mission_list_content">
             </div>
-        </div>
-        <div id="mission_detail" class="hidden">
+        </section>
+        <section id="mission_detail" class="hidden">
             <div>
-                <button id="btn_detail_back">Go back</button>
-                <button id="btn_show_map" class="hidden">Show in map</button>
+                <button id="btn_detail_back">Back to list</button>
+                <button id="btn_show_map" class="hidden">Show in Map</button>
             </div>
             <div id="mission_detail_info" class="mission"></div>
-            <div id="mission_detail_waypoints">
+            <div id="mission_waypoints">
             </div>
-        </div>
+        </section>
     </div>
     <div id="route_container" class="container hidden">
     </div>

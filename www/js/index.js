@@ -52,22 +52,13 @@ var wgstogcj = new WGS84transformer();
 var app = {
     // Application Constructor
     initialize: function() {
-        app.location = {};
-        if (window.location.href.substr(0, 4) == 'http') {
-            // online version
-            this.onDeviceReady();
-            app.datasrc = '.';
-        } else {
-            document.addEventListener('deviceready', this.onDeviceReady, false);
-            app.datasrc = 'http://ingressmm.com';
-        }
         // init map view
         app.map = new AMap.Map('map_container');
         app.map.plugin('AMap.Scale', function() {
             app.map.addControl(new AMap.Scale());
         });
-        app.map.markers = [];
         // init geolocation
+        app.location = {};
         app.location.circle = new AMap.Marker({
             map: app.map,
             offset: new AMap.Pixel(-11.5, -11.5),
@@ -76,32 +67,87 @@ var app = {
             visible: false
         });
         app.location.firstFix = true;
+        // init mission suggest
         app.loadSaved();
         app.loadTrending();
+        // finish
+        if (window.location.href.substr(0, 4) == 'http') {
+            // online version
+            app.datasrc = '.';
+            this.onDeviceReady();
+        } else {
+            app.datasrc = 'http://ingressmm.com';
+            document.addEventListener('deviceready', this.onDeviceReady, false);
+        }
     },
 
-    loadlist: function(url) {
+    // deviceready Event Handler
+    onDeviceReady: function() {
+        if (window.AMapBridge) {
+            // Android client
+            app.amapUpdate = function() {
+                AMapBridge.getLocation(function(result) {
+                    if (!result.lat || !result.lng) return;
+                    app.updateLocation(result.lat, result.lng);
+                    setTimeout(app.amapUpdate, 2000);
+                });
+            };
+            app.amapUpdate();
+        } else {
+            app.location.watch = navigator.geolocation.watchPosition(function(result) {
+                if (result.coords.accuracy = null) return;
+                var pos = wgstogcj.transform(result.coords.latitude, result.coords.longitude);
+                app.updateLocation(pos.lat, pos.lng);
+            }, null, {
+                enableHighAccuracy: true
+            });
+        }
+    },
+
+    switchTab: function(tabName) {
+        $('.container').hide();
+        $('#' + tabName + '_container').show();
+
+        $('nav').find('section').each(function() {
+            $(this).removeClass('activate');
+            if ($(this).attr('data:item') == tabName) {
+                $(this).addClass('activate');
+            }
+        });
+    },
+
+    loadList: function(url) {
         $('#mission_suggest').hide();
         $('#mission_list').show();
-        $('#mission_list_content').html('Loading…');
+        $('#mission_list_content').html('Loading ...');
         $.getJSON(url, function(result) {
             $('#mission_list_content').html('');
-            if (result.mission.length == 0) {
-                $('#mission_list_content').html('No Result');
+            if (!result.mission) {
+                $('#mission_list_content').html('No Result _(:з」∠)_');
             } else for (var key in result.mission) {
                 var mission = result.mission[key];
-                var sequence = '';
+                var type = '';
                 if (mission.sequence == '1') {
-                    sequence = 'Seq';
+                    type = 'Seq';
                 } else if (mission.sequence == '2') {
-                    sequence = 'Any';
+                    type = 'Any';
                 }
                 var gcjPos = wgstogcj.transform(mission.latitude, mission.longitude);
-                var content = '<div class="mission" data:missionid="' + mission.id + '"><div class="mission_icon"><img src="http://ingressmm.com/icon/' + mission.code + '.jpg" /></div><div class="mission_title">' + mission.name + '</div><div>' + sequence + ' <span class="distance" data:lat="' + gcjPos.lat + '" data:lng="' + gcjPos.lng + '"></span></div></div>';
+                var content = '<div class="mission" data:missionid="' + mission.id + '">\
+                    <img src="http://ingressmm.com/icon/' + mission.code + '.jpg" />\
+                    <div>\
+                        <div>' + mission.name + '</div>\
+                        <div>' + type + ' <span class="distance" data:lat="' + gcjPos.lat + '" data:lng="' + gcjPos.lng + '"></span></div>\
+                    </div>\
+                </div>';
                 $('#mission_list_content').append(content);
             }
             app.calcDistance();
         });
+    },
+
+    performSearch: function(key) {
+        app.loadList(app.datasrc + '/get_mission.php?find=' + key + '&findby=0');
     },
 
     updateLocation: function(lat, lng) {
@@ -131,7 +177,9 @@ var app = {
             var saved = JSON.parse(localStorage.saved_search);
             $('#saved_list').html('');
             for (var key in saved) {
-                $('#saved_list').prepend('<div data:name="'+saved[key]+'" data:key="'+key+'"><a href="javascript:">'+key+'</a> <a href="javascript:">[Delete]</a></div>');
+                $('#saved_list').prepend('<div data:name="'+saved[key]+'" data:key="'+key+'">\
+                    <a href="javascript:">'+key+'</a> <a href="javascript:">[Delete]</a>\
+                </div>');
             }
         } catch (e) {}
     },
@@ -139,67 +187,29 @@ var app = {
     loadTrending: function() {
         $.getScript('http://imaq.cn/mission/trending.aq');
     },
-
-    // deviceready Event Handler
-    //
-    // The scope of 'this' is the event. In order to call the 'receivedEvent'
-    // function, we must explicitly call 'app.receivedEvent(...);'
-    onDeviceReady: function() {
-        if (window.AMapBridge) {
-            // For Android
-            app.amapUpdate = function() {
-                AMapBridge.getLocation(function(result) {
-                    if (result == "") return;
-                    app.updateLocation(result.lat, result.lng);
-                    setTimeout(app.amapUpdate, 2000);
-                });
-            };
-            app.amapUpdate();
-        } else {
-            app.location.watch = navigator.geolocation.watchPosition(function(result) {
-                if (result.coords.accuracy = null) return;
-                var pos = wgstogcj.transform(result.coords.latitude, result.coords.longitude);
-                app.updateLocation(pos.lat, pos.lng);
-            }, null, {
-                enableHighAccuracy: true
-            });
-        }
-    }
 };
 
 $(function() {
     // init nav bar
-    $('#nav').find('div').tap(function() {
+    $('nav').find('section').tap(function() {
         if ($(this).hasClass('activate')) return;
-        $('#nav').find('div').removeClass('activate');
-        $(this).addClass('activate');
-        $('.container').hide();
-        switch ($(this).attr('id')) {
-            case 'nav_map':
-                $('#map_container').show();
-                break;
-            case 'nav_mission':
-                $('#mission_container').show();
-                break;
-            case 'nav_route':
-                $('#route_container').show();
-                break;
-        }
+        app.switchTab($(this).attr('data:item'));
     });
     
     // init mission search
-    $('#btn_mission_search').tap(function() {
+    $('#mission_search_box').find('button').tap(function() {
         $('#mission_list').show();
         $('#btn_list_save').show();
-        app.loadlist(app.datasrc+'/get_mission.php?find='+$('#input_mission_name').val()+'&findby=0');
+
+        app.performSearch($('#mission_search_box').find('input').val());
     });
 
-    $('#saved_list').on('tap', 'a:nth-child(1)', function() {
+    // init mission suggest
+    $('#saved_list').on('click', 'a :first-child', function() {
         var name = $(this).parent().attr('data:name');
-        $('#input_mission_name').val(name);
-        $('#btn_mission_search').tap();
-    }).on('click', 'a:nth-child(2)', function() {
-        if (confirm("Sure to delete?")) {
+        app.performSearch(name);
+    }).on('click', 'a:last-child', function() {
+        if (confirm("Are you sure to delete?")) {
             var key = $(this).parent().attr('data:key');
             try {
                 var saved = JSON.parse(localStorage.saved_search);
@@ -209,16 +219,11 @@ $(function() {
         }
         app.loadSaved();
     });
-    
-    // init mission list
-    $('#btn_list_back').tap(function() {
-        $('#btn_list_save').hide();
-        $('#mission_list').hide();
-        $('#mission_suggest').show();
-    });
 
-    $('#btn_list_save').click(function() {
-        var name = prompt("Save as :", $('#input_mission_name').val());
+    // init search save
+    $('#btn_list_save').tap(function() {
+        var input = $('#mission_search_box').find('input').val();
+        var name = prompt("Save as :", input);
         if (name == null) return;
         var data = {};
         if (localStorage.saved_search) {
@@ -226,32 +231,39 @@ $(function() {
                 data = JSON.parse(localStorage.saved_search);
             } catch (e) {}
         }
-        data[name] = $('#input_mission_name').val();
+        data[name] = input;
         localStorage.saved_search = JSON.stringify(data);
         app.loadSaved();
     });
 
+    // init mission list
+    $('#btn_list_back').tap(function() {
+        $('#btn_list_save').hide();
+        $('#mission_list').hide();
+        $('#mission_suggest').show();
+    });
+
     $('#mission_list').on('tap', '.mission', function() {
-        //alert($(this).attr('data:missionid'));
         $('#mission_detail_info').html($(this).html());
         $('#mission_search_box').hide();
         $('#mission_list').hide();
         $('#mission_detail').show();
         $('#btn_show_map').hide();
-        $('#mission_detail_waypoints').html('Loading mission waypoints…');
-        $.getJSON(app.datasrc+'/get_portal.php?mission='+$(this).attr('data:missionid'), function(result) {
-            $('#mission_detail_waypoints').html('');
-            app.current_mission = result;
-            if (result.portal.length == 0) {
-                $('#mission_detail_waypoints').html('Get portals failed…');
-            } else for (var i = 0; i < result.portal.length; i++) {
-                var waypoint = result.portal[i];
-                var content = '<div class="waypoint"><div class="waypoint_name">' + (i+1) + '. ';
-                if (waypoint[0]) {
-                    content = content + 'Waypoint Hidden' + '</div>';
-                } else {
-                    content = content + waypoint[2].name + '</div>';
-                }
+        $('#mission_waypoints').html('Loading mission waypoints ...');
+
+        $.getJSON(app.datasrc + '/get_portal.php?mission=' + $(this).attr('data:missionid'), function(result) {
+            $('#mission_waypoints').html('');
+            if (app.map.markers) {
+                app.map.remove(app.map.markers);
+            }
+            app.map.markers = [];
+
+            if (!result.portal || result.portal.length == 0) {
+                $('#mission_waypoints').html('Get portals failed _(:з」∠)_');
+            } else for (var key in result.portal) {
+                var waypoint = result.portal[key];
+                var content = '<div class="waypoint"><div>' + key + '. ';
+
                 var task_list = [
                     "",
                     "Hack this Portal",
@@ -263,36 +275,49 @@ $(function() {
                     "View this Field Trip Waypoint",
                     "Enter the Passphrase"
                 ];
-                if (!waypoint[0]) {
+
+                if (waypoint[0]) {
+                    content = content + 'Waypoint Hidden' + '</div>';
+                } else {
+                    content = content + waypoint[2].name + '</div>';
+
                     var gcjPos = wgstogcj.transform(waypoint[2].latitude, waypoint[2].longitude);
-                    content = content + '<div>' + task_list[waypoint[1]] + '</div>' + '<div><span class="distance" data:lat="' + gcjPos.lat + '" data:lng="' + gcjPos.lng + '"></span> <a href="javascript:">Walk</a> <a href="javascript:">Drive</a> <a href="javascript:">Transit</a></div>';
+                    content = content + '<div>' + task_list[waypoint[1]] + '</div>\
+                        <div><span class="distance" data:lat="' + gcjPos.lat + '" data:lng="' + gcjPos.lng + '"></span>\
+                        <a href="javascript:">Walk</a> <a href="javascript:">Drive</a> <a href="javascript:">Transit</a></div>';
+
+                    var marker = new AMap.Marker({
+                        map: app.map,
+                        position: [gcjPos.lng, gcjPos.lat],
+                        offset: new AMap.Pixel(-16, -16),
+                        icon: 'https://ingressmm.com/img/p' + (Array(2).join(0)+(Number(key)+1)).slice(-2) + 'n.png'
+                    });
+                    app.map.markers.push(marker);
+
+                    if (key == '0') {
+                        var lng = gcjPos.lng;
+                        var lat = gcjPos.lat;
+                        $('#btn_show_map').tap(function() {
+                            app.map.setZoomAndCenter(16, [lng, lat]);
+                            app.switchTab('map');
+                        });
+                    }
                 }
                 content = content + '</div>';
-                $('#mission_detail_waypoints').append(content);
+                $('#mission_waypoints').append(content);
             }
             $('#btn_show_map').show();
+
             app.calcDistance();
-            app.map.remove(app.map.markers);
-            for (var i = 0; i < app.current_mission.portal.length; i++) {
-                var waypoint = app.current_mission.portal[i];
-                if (waypoint[0]) continue;
-                var newpos = new WGS84transformer().transform(waypoint[2].latitude, waypoint[2].longitude);
-                var marker = new AMap.Marker({
-                    map: app.map,
-                    position: [newpos.lng, newpos.lat],
-                    offset: new AMap.Pixel(-16, -16),
-                    icon: 'https://ingressmm.com/img/p' + (Array(2).join(0)+(i+1)).slice(-2) + 'n.png'
-                });
-                app.map.markers.push(marker);
-                if (i == 0) {
-                    app.map.setZoomAndCenter(16, [newpos.lng, newpos.lat]);
-                }
-            }
         });
     });
     
     // init mission detail
     $('#btn_detail_back').click(function() {
+        if (app.map.markers) {
+            app.map.remove(app.map.markers);
+            app.map.markers = [];
+        }
         if (app.transport) {
             app.transport.clear();
         }
@@ -300,12 +325,9 @@ $(function() {
         $('#mission_search_box').show();
         $('#mission_list').show();
     });
-    
-    $('#btn_show_map').tap(function() {
-        $('#nav_map').tap();
-    });
-    
-    $('#mission_detail_waypoints').on('tap', 'a', function() {
+
+    // init transport search
+    $('#mission_waypoints').on('click', 'a', function() {
         var _this = $(this);
         AMap.service(['AMap.Walking', 'AMap.Driving', 'AMap.Transfer'], function() {
             var param = {
@@ -318,20 +340,19 @@ $(function() {
             switch (_this.html()) {
                 case 'Walk':
                     app.transport = new AMap.Walking(param);
-                    $('#nav_map').tap();
+                    app.switchTab('map');
                     break;
                 case 'Drive':
                     app.transport = new AMap.Driving(param);
-                    $('#nav_route').tap();
+                    app.switchTab('route');
                     break;
                 case 'Transit':
                     app.transport = new AMap.Transfer(param);
-                    $('#nav_route').tap();
+                    app.switchTab('route');
                     break;
             }
             var target = _this.parent().find('.distance');
-            var target_pos = [Number(target.attr('data:lng')), Number(target.attr('data:lat'))];
-            app.transport.search([app.location.lng, app.location.lat], target_pos);
+            app.transport.search([app.location.lng, app.location.lat], [Number(target.attr('data:lng')), Number(target.attr('data:lat'))]);
         });
     });
 

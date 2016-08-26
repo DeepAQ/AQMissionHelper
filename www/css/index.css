@@ -14,24 +14,19 @@ body {
     font-family: sans-serif;
 }
 
-#nav {
-    position: fixed;
-    top: 0;
-    width: 100%;
+nav {
     height: 40px;
-    z-index: 999;
-    background-color: #ffffff;
-    display: -webkit-box;
-    -webkit-box-orient: horizontal;
+    display: flex;
 }
 
-#nav > div {
-    -webkit-box-flex: 1;
+nav > section {
+    -webkit-flex: 1;
+    flex: 1;
     text-align: center;
     line-height: 40px;
 }
 
-#nav .activate {
+nav .activate {
     font-weight: bold;
     border-bottom: #000 solid 3px;
 }
@@ -40,18 +35,16 @@ body {
     position: absolute;
     top: 40px;
     bottom: 0;
-}
-
-#map_container, #route_container {
     width: 100%;
 }
 
 #mission_container {
-    margin: 10px 20px 0 20px;
+    width: auto;
+    margin: 10px 20px;
     word-break: break-all;
 }
 
-.suggest_title {
+#mission_suggest > section {
     font-size: 20px;
     font-weight: bold;
     margin-top: 20px;
@@ -63,22 +56,26 @@ body {
 
 .mission {
     margin-top: 10px;
-    position: relative;
-    padding-left: 56px;
     line-height: 24px;
     min-height: 48px;
+    display: -webkit-flex;
+    display: flex;
 }
 
-.mission_icon {
-    position: absolute;
-    top: 0;
-    left: 0;
-}
-
-.mission_icon > img {
+.mission > img {
     width: 48px;
     height: 48px;
-    border-radius: 24px;
+    border-radius: 50%;
+}
+
+.mission > div {
+    -webkit-flex: 1;
+    flex: 1;
+    margin-left: 10px;
+}
+
+.mission > div > :first-child {
+    font-weight: bold;
 }
 
 .mission_title {
@@ -89,6 +86,6 @@ body {
     margin-top: 10px;
 }
 
-.waypoint_name {
+.waypoint > :first-child {
     font-weight: bold;
 }
