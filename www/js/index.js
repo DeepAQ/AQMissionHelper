@@ -9,7 +9,7 @@ WGS84transformer.prototype.a = 6378245.0;
 WGS84transformer.prototype.ee = 0.00669342162296594323;
 
 WGS84transformer.prototype.transform = function(wgLat, wgLng) {
-    if(this.isOutOfChina(wgLat, wgLng))
+    if(this.isOutOfMainlandChina(wgLat, wgLng))
         return {lat: wgLat, lng: wgLng};
     dLat = this.transformLat(wgLng - 105.0, wgLat - 35.0);
     dLng = this.transformLng(wgLng - 105.0, wgLat - 35.0);
@@ -24,7 +24,8 @@ WGS84transformer.prototype.transform = function(wgLat, wgLng) {
     return {lat: mgLat, lng: mgLng};
 };
 
-WGS84transformer.prototype.isOutOfChina = function(lat, lng) {
+WGS84transformer.prototype.isOutOfMainlandChina = function(lat, lng) {
+    if(lat >= 21.8 && lat <= 25.3 && lng >= 120.0 && lng <= 122.0) return true;
     if(lng < 72.004 || lng > 137.8347) return true;
     if(lat < 0.8293 || lat > 55.8271) return true;
     return false;
