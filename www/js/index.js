@@ -353,7 +353,15 @@ $(function() {
                     break;
             }
             var target = _this.parent().find('.distance');
-            app.transport.search([app.location.lng, app.location.lat], [Number(target.attr('data:lng')), Number(target.attr('data:lat'))]);
+            app.transport.search([app.location.lng, app.location.lat],
+                [Number(target.attr('data:lng')), Number(target.attr('data:lat'))],
+                function(status, result) {
+                    if (status != 'complete' || !result.info) {
+                        alert('No route found _(:з」∠)_');
+                        app.switchTab('mission');
+                    }
+                }
+            );
         });
     });
 
