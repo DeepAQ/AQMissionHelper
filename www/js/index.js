@@ -96,7 +96,7 @@ var app = {
             app.amapUpdate();
         } else {
             app.location.watch = navigator.geolocation.watchPosition(function(result) {
-                if (result.coords.accuracy = null) return;
+                if (result.coords.accuracy == null) return;
                 var pos = wgstogcj.transform(result.coords.latitude, result.coords.longitude);
                 app.updateLocation(pos.lat, pos.lng);
             }, null, {
