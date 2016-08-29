@@ -207,7 +207,7 @@ $(function() {
     });
 
     // init mission suggest
-    $('#saved_list').on('click', 'a :first-child', function() {
+    $('#saved_list').on('click', 'a:first-child', function() {
         var name = $(this).parent().attr('data-name');
         app.performSearch(name);
     }).on('click', 'a:last-child', function() {
