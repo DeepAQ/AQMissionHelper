@@ -3,28 +3,28 @@
 
 <head>
     <meta charset="utf-8" />
+    <title>AQMissionHelper</title>
+    <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1" />
     <meta name="format-detection" content="telephone=no" />
     <meta name="msapplication-tap-highlight" content="no" />
-    <meta name="viewport" content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1, width=device-width" />
     <meta name="apple-mobile-web-app-capable" content="yes">
 	<meta name="apple-mobile-web-app-status-bar-style" content="white">
+    <link rel="shortcut icon" href="res/icon/android/drawable-xxxhdpi-icon.png">
 	<link rel="apple-touch-icon" href="res/icon/android/drawable-xxxhdpi-icon.png">
     <link rel="stylesheet" type="text/css" href="css/index.css" />
-    <title>AQMissionHelper</title>
     <script type="text/javascript" src="cordova.js"></script>
     <script type="text/javascript" src="http://webapi.amap.com/maps?v=1.3&key=b6204dad0365ff1af7b46fb2ebed01c5"></script>
     <script type="text/javascript" src="js/jquery.min.js"></script>
-    <script type="text/javascript" src="js/jquery.mobile.custom.min.js"></script>
     <script type="text/javascript" src="js/index.js"></script>
 </head>
 
 <body>
     <nav>
-        <section data:item="map" class="activate">Map</section>
-        <section data:item="mission">Mission</section>
-        <section data:item="route">Route</section>
+        <section data-item="map">Map</section>
+        <section data-item="mission">Mission</section>
+        <section data-item="route">Route</section>
     </nav>
-    <div id="map_container" class="container">
+    <div id="map_container" class="container hidden">
     </div>
     <div id="mission_container" class="container hidden">
         <section id="mission_search_box">
@@ -39,6 +39,12 @@
             <div id="saved_list"></div>
             <section>Trending</section>
             <div id="trending_list">Nothing right now!</div>
+            <section>About AQMissionHelper</section>
+            <div>
+                Version 1.0 (160829)<br />
+                &copy;2016 DeepAQ. All rights reserved.<br />
+                Ingress Fan-site. Not officially affiliated with Ingress or Niantic Labs.
+            </div>
         </section>
         <section id="mission_list" class="hidden">
             <button id="btn_list_back">Hide List</button>

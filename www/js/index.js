@@ -72,6 +72,7 @@ var app = {
         app.loadSaved();
         app.loadTrending();
         // finish
+        app.switchTab('mission');
         if (window.location.href.substr(0, 4) == 'http') {
             // online version
             app.datasrc = '.';
@@ -111,7 +112,7 @@ var app = {
 
         $('nav').find('section').each(function() {
             $(this).removeClass('activate');
-            if ($(this).attr('data:item') == tabName) {
+            if ($(this).attr('data-item') == tabName) {
                 $(this).addClass('activate');
             }
         });
@@ -134,11 +135,11 @@ var app = {
                     type = 'Any';
                 }
                 var gcjPos = wgstogcj.transform(mission.latitude, mission.longitude);
-                var content = '<div class="mission" data:missionid="' + mission.id + '">\
+                var content = '<div class="mission" data-missionid="' + mission.id + '">\
                     <img src="http://ingressmm.com/icon/' + mission.code + '.jpg" />\
                     <div>\
                         <div>' + mission.name + '</div>\
-                        <div>' + type + ' <span class="distance" data:lat="' + gcjPos.lat + '" data:lng="' + gcjPos.lng + '"></span></div>\
+                        <div>' + type + ' <span class="distance" data-lat="' + gcjPos.lat + '" data-lng="' + gcjPos.lng + '"></span></div>\
                     </div>\
                 </div>';
                 $('#mission_list_content').append(content);
@@ -165,8 +166,8 @@ var app = {
 
     calcDistance: function() {
         $('.distance').each(function() {
-            var lat = Number($(this).attr('data:lat'));
-            var lng = Number($(this).attr('data:lng'));
+            var lat = Number($(this).attr('data-lat'));
+            var lng = Number($(this).attr('data-lng'));
             $(this).html(Math.ceil(new AMap.LngLat(lng, lat).distance([app.location.lng, app.location.lat])) + 'm');
         });
     },
@@ -178,7 +179,7 @@ var app = {
             var saved = JSON.parse(localStorage.saved_search);
             $('#saved_list').html('');
             for (var key in saved) {
-                $('#saved_list').prepend('<div data:name="'+saved[key]+'" data:key="'+key+'">\
+                $('#saved_list').prepend('<div data-name="'+saved[key]+'" data-key="'+key+'">\
                     <a href="javascript:">'+key+'</a> <a href="javascript:">[Delete]</a>\
                 </div>');
             }
@@ -192,13 +193,13 @@ var app = {
 
 $(function() {
     // init nav bar
-    $('nav').find('section').tap(function() {
+    $('nav').find('section').click(function() {
         if ($(this).hasClass('activate')) return;
-        app.switchTab($(this).attr('data:item'));
+        app.switchTab($(this).attr('data-item'));
     });
     
     // init mission search
-    $('#mission_search_box').find('button').tap(function() {
+    $('#mission_search_box').find('button').click(function() {
         $('#mission_list').show();
         $('#btn_list_save').show();
 
@@ -207,11 +208,11 @@ $(function() {
 
     // init mission suggest
     $('#saved_list').on('click', 'a :first-child', function() {
-        var name = $(this).parent().attr('data:name');
+        var name = $(this).parent().attr('data-name');
         app.performSearch(name);
     }).on('click', 'a:last-child', function() {
         if (confirm("Are you sure to delete?")) {
-            var key = $(this).parent().attr('data:key');
+            var key = $(this).parent().attr('data-key');
             try {
                 var saved = JSON.parse(localStorage.saved_search);
                 delete saved[key];
@@ -222,7 +223,7 @@ $(function() {
     });
 
     // init search save
-    $('#btn_list_save').tap(function() {
+    $('#btn_list_save').click(function() {
         var input = $('#mission_search_box').find('input').val();
         var name = prompt("Save as :", input);
         if (name == null) return;
@@ -238,13 +239,13 @@ $(function() {
     });
 
     // init mission list
-    $('#btn_list_back').tap(function() {
+    $('#btn_list_back').click(function() {
         $('#btn_list_save').hide();
         $('#mission_list').hide();
         $('#mission_suggest').show();
     });
 
-    $('#mission_list').on('tap', '.mission', function() {
+    $('#mission_list').on('click', '.mission', function() {
         $('#mission_detail_info').html($(this).html());
         $('#mission_search_box').hide();
         $('#mission_list').hide();
@@ -252,7 +253,7 @@ $(function() {
         $('#btn_show_map').hide();
         $('#mission_waypoints').html('Loading mission waypoints ...');
 
-        $.getJSON(app.datasrc + '/get_portal.php?mission=' + $(this).attr('data:missionid'), function(result) {
+        $.getJSON(app.datasrc + '/get_portal.php?mission=' + $(this).attr('data-missionid'), function(result) {
             $('#mission_waypoints').html('');
             if (app.map.markers) {
                 app.map.remove(app.map.markers);
@@ -284,7 +285,7 @@ $(function() {
 
                     var gcjPos = wgstogcj.transform(waypoint[2].latitude, waypoint[2].longitude);
                     content = content + '<div>' + task_list[waypoint[1]] + '</div>\
-                        <div><span class="distance" data:lat="' + gcjPos.lat + '" data:lng="' + gcjPos.lng + '"></span>\
+                        <div><span class="distance" data-lat="' + gcjPos.lat + '" data-lng="' + gcjPos.lng + '"></span>\
                         <a href="javascript:">Walk</a> <a href="javascript:">Drive</a> <a href="javascript:">Transit</a></div>';
 
                     var marker = new AMap.Marker({
@@ -298,7 +299,7 @@ $(function() {
                     if (key == '0') {
                         var lng = gcjPos.lng;
                         var lat = gcjPos.lat;
-                        $('#btn_show_map').tap(function() {
+                        $('#btn_show_map').click(function() {
                             app.map.setZoomAndCenter(16, [lng, lat]);
                             app.switchTab('map');
                         });
@@ -354,7 +355,7 @@ $(function() {
             }
             var target = _this.parent().find('.distance');
             app.transport.search([app.location.lng, app.location.lat],
-                [Number(target.attr('data:lng')), Number(target.attr('data:lat'))],
+                [Number(target.attr('data-lng')), Number(target.attr('data-lat'))],
                 function(status, result) {
                     if (status != 'complete' || !result.info) {
                         alert('No route found _(:з」∠)_');
