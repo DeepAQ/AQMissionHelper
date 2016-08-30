@@ -264,7 +264,7 @@ $(function() {
                 $('#mission_waypoints').html('Get portals failed _(:з」∠)_');
             } else for (var key in result.portal) {
                 var waypoint = result.portal[key];
-                var content = '<div class="waypoint"><div>' + key + '. ';
+                var content = '<div class="waypoint"><div>' + (Number(key)+1) + '. ';
 
                 var task_list = [
                     "",
