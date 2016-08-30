@@ -334,7 +334,8 @@ $(function() {
         AMap.service(['AMap.Walking', 'AMap.Driving', 'AMap.Transfer'], function() {
             var param = {
                 map: app.map,
-                panel: 'route_container'
+                panel: 'route_container',
+                city: 'undefined'
             };
             if (app.transport) {
                 app.transport.clear();

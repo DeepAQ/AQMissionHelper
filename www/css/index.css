@@ -35,13 +35,25 @@ nav .activate {
     position: absolute;
     top: 40px;
     bottom: 0;
-    width: 100%;
+    left: 0;
+    right: 0;
 }
 
 #mission_container {
     width: auto;
     margin: 10px 20px;
     word-break: break-all;
+}
+
+#mission_search_box {
+    display: -webkit-flex;
+    display: flex;
+    width: 100%;
+}
+
+#mission_search_box > input {
+    -webkit-flex: 1;
+    flex: 1;
 }
 
 #mission_suggest > section {
