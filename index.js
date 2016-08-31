@@ -130,9 +130,11 @@ var app = {
                 var mission = result.mission[key];
                 var type = '';
                 if (mission.sequence == '1') {
-                    type = 'Seq';
+                    type = 'Sequence';
                 } else if (mission.sequence == '2') {
-                    type = 'Any';
+                    type = 'Any Order';
+                } else {
+                    type = 'Hidden';
                 }
                 var gcjPos = wgstogcj.transform(mission.latitude, mission.longitude);
                 var content = '<div class="mission" data-missionid="' + mission.id + '">\
