@@ -51,6 +51,8 @@ WGS84transformer.prototype.transformLng = function(x, y) {
 var wgstogcj = new WGS84transformer();
 
 var app = {
+    online_url: 'http://imaq.cn/mission',
+
     // Application Constructor
     initialize: function() {
         // init map view
@@ -71,6 +73,9 @@ var app = {
         // init mission suggest
         app.loadSaved();
         app.loadTrending();
+        // load versions
+        $('#local_ver').load('version.html');
+        $('#online_ver').load(app.online_url + '/version.html');
         // finish
         app.switchTab('mission');
         if (window.location.href.substr(0, 4) == 'http') {
@@ -189,7 +194,7 @@ var app = {
     },
 
     loadTrending: function() {
-        $.getScript('http://imaq.cn/mission/trending.aq');
+        $.getScript(app.online_url + '/mission/trending.aq');
     },
 };
 
