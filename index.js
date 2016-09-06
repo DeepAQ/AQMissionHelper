@@ -194,7 +194,7 @@ var app = {
     },
 
     loadTrending: function() {
-        $.getScript(app.online_url + '/mission/trending.aq');
+        $.getScript(app.online_url + '/trending.aq');
     },
 };
 
@@ -293,7 +293,10 @@ $(function() {
                     var gcjPos = wgstogcj.transform(waypoint[2].latitude, waypoint[2].longitude);
                     content = content + '<div>' + task_list[waypoint[1]] + '</div>\
                         <div><span class="distance" data-lat="' + gcjPos.lat + '" data-lng="' + gcjPos.lng + '"></span>\
-                        <a href="javascript:">Walk</a> <a href="javascript:">Drive</a> <a href="javascript:">Transit</a></div>';
+                        <a href="https://www.ingress.com/intel?ll=' + waypoint[2].latitude + ',' + waypoint[2].longitude + '" target="_blank">Intel</a>\
+                        <a href="javascript:">Walk</a>\
+                        <a href="javascript:">Drive</a>\
+                        <a href="javascript:">Transit</a></div>';
 
                     var marker = new AMap.Marker({
                         map: app.map,
@@ -338,6 +341,7 @@ $(function() {
     // init transport search
     $('#mission_waypoints').on('click', 'a', function() {
         var _this = $(this);
+        if (_this.html() == 'Intel') return;
         AMap.service(['AMap.Walking', 'AMap.Driving', 'AMap.Transfer'], function() {
             var param = {
                 map: app.map,
