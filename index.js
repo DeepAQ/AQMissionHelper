@@ -60,7 +60,8 @@ var app = {
         app.map.plugin('AMap.Scale', function() {
             app.map.addControl(new AMap.Scale());
         });
-        // init geolocation
+        app.switchTab('map');
+        // init geolocation circle
         app.location = {};
         app.location.circle = new AMap.Marker({
             map: app.map,
@@ -76,8 +77,7 @@ var app = {
         // load versions
         $('#local_ver').load('version.html');
         $('#online_ver').load(app.online_url + '/version.html');
-        // finish
-        app.switchTab('mission');
+        // prepare location
         if (window.location.href.substr(0, 4) == 'http') {
             // online version
             app.datasrc = '.';
@@ -111,6 +111,11 @@ var app = {
         }
     },
 
+    finishLoading: function() {
+        app.switchTab('mission');
+        $('#loading').hide();
+    },
+
     switchTab: function(tabName) {
         $('.container').hide();
         $('#' + tabName + '_container').show();
@@ -121,6 +126,19 @@ var app = {
                 $(this).addClass('activate');
             }
         });
+    },
+
+    updateLocation: function(lat, lng) {
+        app.location.lat = lat;
+        app.location.lng = lng;
+        app.calcDistance();
+        app.location.circle.setPosition([lng, lat]);
+        app.location.circle.show();
+        if (app.location.firstFix) {
+            app.map.setZoomAndCenter(16, [lng, lat]);
+            app.location.firstFix = false;
+            setTimeout(app.finishLoading, 2000);
+        }
     },
 
     loadList: function(url) {
@@ -157,18 +175,6 @@ var app = {
 
     performSearch: function(key) {
         app.loadList(app.datasrc + '/get_mission.php?find=' + key + '&findby=0');
-    },
-
-    updateLocation: function(lat, lng) {
-        app.location.lat = lat;
-        app.location.lng = lng;
-        app.calcDistance();
-        app.location.circle.setPosition([lng, lat]);
-        app.location.circle.show();
-        if (app.location.firstFix) {
-            app.map.setZoomAndCenter(16, [lng, lat]);
-            app.location.firstFix = false;
-        }
     },
 
     calcDistance: function() {
