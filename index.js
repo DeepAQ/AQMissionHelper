@@ -137,6 +137,7 @@ var app = {
         if (app.location.firstFix) {
             app.map.setZoomAndCenter(16, [lng, lat]);
             app.location.firstFix = false;
+            $('#skip').hide();
             setTimeout(app.finishLoading, 2000);
         }
     },
@@ -205,6 +206,12 @@ var app = {
 };
 
 $(function() {
+    // init loading
+    $('#skip').click(function() {
+        app.location.firstFix = false;
+        app.finishLoading();
+    });
+
     // init nav bar
     $('nav').find('section').click(function() {
         if ($(this).hasClass('activate')) return;
