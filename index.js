@@ -394,3 +394,12 @@ $(function() {
     // init app
     app.initialize();
 });
+
+// baidu tongji
+var _hmt = _hmt || [];
+(function() {
+    var hm = document.createElement("script");
+    hm.src = "//hm.baidu.com/hm.js?5856859c70f401bb0776106ddfb5e13c";
+    var s = document.getElementsByTagName("script")[0];
+    s.parentNode.insertBefore(hm, s);
+})();
