@@ -57,7 +57,8 @@ var app = {
     initialize: function() {
         // init map view
         app.map = new AMap.Map('map_container');
-        app.map.plugin('AMap.Scale', function() {
+        app.map.plugin(['AMap.ToolBar', 'AMap.Scale'], function() {
+            app.map.addControl(new AMap.ToolBar());
             app.map.addControl(new AMap.Scale());
         });
         app.switchTab('map');
@@ -66,7 +67,7 @@ var app = {
         app.location.circle = new AMap.Marker({
             map: app.map,
             offset: new AMap.Pixel(-11.5, -11.5),
-            icon: 'http://webapi.amap.com/theme/v1.3/markers/n/loc.png',
+            icon: 'img/loc.png',
             zIndex: 200,
             visible: false
         });
@@ -96,7 +97,7 @@ var app = {
                 AMapBridge.getLocation(function(result) {
                     if (!result.lat || !result.lng) return;
                     app.updateLocation(result.lat, result.lng);
-                    setTimeout(app.amapUpdate, 2000);
+                    setTimeout(app.amapUpdate, 1000);
                 });
             };
             app.amapUpdate();
@@ -107,6 +108,16 @@ var app = {
                 app.updateLocation(pos.lat, pos.lng);
             }, null, {
                 enableHighAccuracy: true
+            });
+        }
+        // Device orientation
+        if (navigator.compass) {
+            app.location.circle.setIcon('img/loc_o.png');
+            app.location.circle.setOffset(new AMap.Pixel(-11.5, -13.5));
+            app.location.compass = navigator.compass.watchHeading(function(heading) {
+                app.location.circle.setAngle(heading.magneticHeading);
+            }, null, {
+                frequency: 100
             });
         }
     },
@@ -279,6 +290,7 @@ $(function() {
                 app.map.remove(app.map.markers);
             }
             app.map.markers = [];
+            var minLat = 90, maxLat = -90, minLng = 180, maxLng = -180;
 
             if (!result.portal || result.portal.length == 0) {
                 $('#mission_waypoints').html('Get portals failed _(:з」∠)_');
@@ -304,6 +316,11 @@ $(function() {
                     content = content + waypoint[2].name + '</div>';
 
                     var gcjPos = wgstogcj.transform(waypoint[2].latitude, waypoint[2].longitude);
+                    if (gcjPos.lat < minLat) minLat = gcjPos.lat;
+                    if (gcjPos.lat > maxLat) maxLat = gcjPos.lat;
+                    if (gcjPos.lng < minLng) minLng = gcjPos.lng;
+                    if (gcjPos.lng > maxLng) maxLng = gcjPos.lng;
+
                     content = content + '<div>' + task_list[waypoint[1]] + '</div>\
                         <div><span class="distance" data-lat="' + gcjPos.lat + '" data-lng="' + gcjPos.lng + '"></span>\
                         <a href="https://www.ingress.com/intel?ll=' + waypoint[2].latitude + ',' + waypoint[2].longitude + '" target="_blank">Intel</a>\
@@ -318,20 +335,14 @@ $(function() {
                         icon: 'https://ingressmm.com/img/p' + (Array(2).join(0)+(Number(key)+1)).slice(-2) + 'n.png'
                     });
                     app.map.markers.push(marker);
-
-                    if (key == '0') {
-                        var lng = gcjPos.lng;
-                        var lat = gcjPos.lat;
-                        $('#btn_show_map').click(function() {
-                            app.map.setZoomAndCenter(16, [lng, lat]);
-                            app.switchTab('map');
-                        });
-                    }
                 }
                 content = content + '</div>';
                 $('#mission_waypoints').append(content);
             }
-            $('#btn_show_map').show();
+            $('#btn_show_map').click(function() {
+                app.map.setBounds(new AMap.Bounds([minLng, minLat], [maxLng, maxLat]));
+                app.switchTab('map');
+            }).show();
 
             app.calcDistance();
         });
@@ -359,7 +370,8 @@ $(function() {
             var param = {
                 map: app.map,
                 panel: 'route_container',
-                city: 'undefined'
+                city: 'undefined',
+                nightflag: true
             };
             if (app.transport) {
                 app.transport.clear();
