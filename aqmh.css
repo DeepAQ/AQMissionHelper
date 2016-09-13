@@ -11,13 +11,13 @@ body {
     -webkit-text-size-adjust: none;             /* prevent webkit from resizing text to fit */
     -webkit-user-select: none;                  /* prevent copy paste, to allow, change 'none' to 'text' */
     margin: 0;
-    font-family: sans-serif;
+    font-family: "Pingfang SC", "Heiti SC", "Source Han Sans SC", "Microsoft Yahei", Helvetica, Arial, sans-serif;
     background-color: #e0f2f1;
     color: #004d40;
 }
 
 a {
-    color: #00897b;
+    color: #009688;
     text-decoration: none;
 }
 

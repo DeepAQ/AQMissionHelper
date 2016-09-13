@@ -248,10 +248,10 @@ $(function() {
 
     // init mission search
     $('#mission_search_box').find('button').click(function() {
-        $('#mission_list').show();
-        $('#btn_list_save').show();
         var key = $('#mission_search_box').find('input').val();
         if ($.trim(key) == '') return;
+        $('#mission_list').show();
+        $('#btn_list_save').show();
         app.performSearch(key);
         // save to recent searches
         var data = [];
