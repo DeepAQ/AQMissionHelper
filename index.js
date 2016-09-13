@@ -73,6 +73,7 @@ var app = {
         });
         app.location.firstFix = true;
         // init mission suggest
+        app.loadRecent();
         app.loadSaved();
         app.loadTrending();
         // load versions
@@ -93,16 +94,16 @@ var app = {
     onDeviceReady: function() {
         if (window.AMapBridge) {
             // Android client
-            app.amapUpdate = function() {
+            var amapUpdate = function() {
                 AMapBridge.getLocation(function(result) {
                     if (!result.lat || !result.lng) return;
                     app.updateLocation(result.lat, result.lng);
-                    setTimeout(app.amapUpdate, 1000);
+                    setTimeout(amapUpdate, 1000);
                 });
             };
-            app.amapUpdate();
+            amapUpdate();
         } else {
-            app.location.watch = navigator.geolocation.watchPosition(function(result) {
+            navigator.geolocation.watchPosition(function(result) {
                 if (result.coords.accuracy == null) return;
                 var pos = wgstogcj.transform(result.coords.latitude, result.coords.longitude);
                 app.updateLocation(pos.lat, pos.lng);
@@ -114,7 +115,7 @@ var app = {
         if (navigator.compass) {
             app.location.circle.setIcon('img/loc_o.png');
             app.location.circle.setOffset(new AMap.Pixel(-11.5, -13.5));
-            app.location.compass = navigator.compass.watchHeading(function(heading) {
+            navigator.compass.watchHeading(function(heading) {
                 app.location.circle.setAngle(heading.magneticHeading);
             }, null, {
                 frequency: 100
@@ -132,9 +133,10 @@ var app = {
         $('#' + tabName + '_container').show();
 
         $('nav').find('section').each(function() {
-            $(this).removeClass('activate');
             if ($(this).attr('data-item') == tabName) {
                 $(this).addClass('activate');
+            } else {
+                $(this).removeClass('activate');
             }
         });
     },
@@ -156,11 +158,12 @@ var app = {
     loadList: function(url) {
         $('#mission_suggest').hide();
         $('#mission_list').show();
-        $('#mission_list_content').html('Loading ...');
+        var list = $('#mission_list_content');
+        list.html('Loading ...');
         $.getJSON(url, function(result) {
-            $('#mission_list_content').html('');
+            list.html('');
             if (!result.mission) {
-                $('#mission_list_content').html('No Result _(:з」∠)_');
+                list.html('No Result _(:з」∠)_');
             } else for (var key in result.mission) {
                 var mission = result.mission[key];
                 var type = '';
@@ -179,7 +182,7 @@ var app = {
                         <div>' + type + ' <span class="distance" data-lat="' + gcjPos.lat + '" data-lng="' + gcjPos.lng + '"></span></div>\
                     </div>\
                 </div>';
-                $('#mission_list_content').append(content);
+                list.append(content);
             }
             app.calcDistance();
         });
@@ -196,15 +199,29 @@ var app = {
             $(this).html(Math.ceil(new AMap.LngLat(lng, lat).distance([app.location.lng, app.location.lat])) + 'm');
         });
     },
-    
+
+    loadRecent: function() {
+        var list = $('#recent_list');
+        list.html('No recent searches');
+        if (!localStorage.recent_search) return;
+        try {
+            var recent = JSON.parse(localStorage.recent_search);
+            list.html('');
+            for (var key in recent) {
+                list.prepend('<div data-name="'+recent[key]+'"><a href="javascript:">'+recent[key]+'</a></div>');
+            }
+        } catch (e) {}
+    },
+
     loadSaved: function() {
-        $('#saved_list').html('No saved searches');
+        var list = $('#saved_list');
+        list.html('No saved searches');
         if (!localStorage.saved_search) return;
         try {
             var saved = JSON.parse(localStorage.saved_search);
-            $('#saved_list').html('');
+            list.html('');
             for (var key in saved) {
-                $('#saved_list').prepend('<div data-name="'+saved[key]+'" data-key="'+key+'">\
+                list.prepend('<div data-name="'+saved[key]+'" data-key="'+key+'">\
                     <a href="javascript:">'+key+'</a> <a href="javascript:">[Delete]</a>\
                 </div>');
             }
@@ -228,20 +245,37 @@ $(function() {
         if ($(this).hasClass('activate')) return;
         app.switchTab($(this).attr('data-item'));
     });
-    
+
     // init mission search
     $('#mission_search_box').find('button').click(function() {
         $('#mission_list').show();
         $('#btn_list_save').show();
-
-        app.performSearch($('#mission_search_box').find('input').val());
+        var key = $('#mission_search_box').find('input').val();
+        if ($.trim(key) == '') return;
+        app.performSearch(key);
+        // save to recent searches
+        var data = [];
+        if (localStorage.recent_search) {
+            try {
+                data = JSON.parse(localStorage.recent_search);
+            } catch (e) {}
+        }
+        if ($.inArray(key, data) == -1) {
+            data.push(key);
+            while (data.length > 5) {
+                data.shift();
+            }
+        }
+        localStorage.recent_search = JSON.stringify(data);
+        app.loadRecent();
     });
 
     // init mission suggest
-    $('#saved_list').on('click', 'a:first-child', function() {
+    $('#saved_list, #recent_list').on('click', 'a:first-child', function() {
         var name = $(this).parent().attr('data-name');
         app.performSearch(name);
-    }).on('click', 'a:last-child', function() {
+    });
+    $('#saved_list').on('click', 'a:last-child', function() {
         if (confirm("Are you sure to delete?")) {
             var key = $(this).parent().attr('data-key');
             try {
@@ -282,10 +316,11 @@ $(function() {
         $('#mission_list').hide();
         $('#mission_detail').show();
         $('#btn_show_map').hide();
-        $('#mission_waypoints').html('Loading mission waypoints ...');
+        var list = $('#mission_waypoints');
+        list.html('Loading mission waypoints ...');
 
         $.getJSON(app.datasrc + '/get_portal.php?mission=' + $(this).attr('data-missionid'), function(result) {
-            $('#mission_waypoints').html('');
+            list.html('');
             if (app.map.markers) {
                 app.map.remove(app.map.markers);
             }
@@ -293,7 +328,7 @@ $(function() {
             var minLat = 90, maxLat = -90, minLng = 180, maxLng = -180;
 
             if (!result.portal || result.portal.length == 0) {
-                $('#mission_waypoints').html('Get portals failed _(:з」∠)_');
+                list.html('Get portals failed _(:з」∠)_');
             } else for (var key in result.portal) {
                 var waypoint = result.portal[key];
                 var content = '<div class="waypoint"><div>' + (Number(key)+1) + '. ';
@@ -337,7 +372,7 @@ $(function() {
                     app.map.markers.push(marker);
                 }
                 content = content + '</div>';
-                $('#mission_waypoints').append(content);
+                list.append(content);
             }
             $('#btn_show_map').click(function() {
                 app.map.setBounds(new AMap.Bounds([minLng, minLat], [maxLng, maxLat]));
@@ -347,7 +382,7 @@ $(function() {
             app.calcDistance();
         });
     });
-    
+
     // init mission detail
     $('#btn_detail_back').click(function() {
         if (app.map.markers) {
@@ -366,6 +401,9 @@ $(function() {
     $('#mission_waypoints').on('click', 'a', function() {
         var _this = $(this);
         if (_this.html() == 'Intel') return;
+        if (app.transport) {
+            app.transport.clear();
+        }
         AMap.service(['AMap.Walking', 'AMap.Driving', 'AMap.Transfer'], function() {
             var param = {
                 map: app.map,
@@ -373,9 +411,6 @@ $(function() {
                 city: 'undefined',
                 nightflag: true
             };
-            if (app.transport) {
-                app.transport.clear();
-            }
             switch (_this.html()) {
                 case 'Walk':
                     app.transport = new AMap.Walking(param);
@@ -408,12 +443,11 @@ $(function() {
 });
 
 // analyze
-var a3653tf="51la";var a3653pu="";var a3653pf="51la";var a3653su=window.location;var a3653sf=document.referrer;var a3653of="";var a3653op="";var a3653ops=1;var a3653ot=1;var a3653d=new Date();var a3653color="";if (navigator.appName=="Netscape"){a3653color=screen.pixelDepth;} else {a3653color=screen.colorDepth;}
+var a3653tf="51la";var a3653pf="51la";var a3653su=window.location;var a3653sf=document.referrer;var a3653of="";var a3653op="";var a3653ops=1;var a3653ot=1;var a3653d=new Date();var a3653color="";if (navigator.appName=="Netscape"){a3653color=screen.pixelDepth;} else {a3653color=screen.colorDepth;}
 try{a3653tf=top.document.referrer;}catch(e){}
-try{a3653pu =window.parent.location;}catch(e){}
 try{a3653pf=window.parent.document.referrer;}catch(e){}
 try{a3653ops=document.cookie.match(new RegExp("(^| )a3653_pages=([^;]*)(;|$)"));a3653ops=(a3653ops==null)?1: (parseInt(unescape((a3653ops)[2]))+1);var a3653oe =new Date();a3653oe.setTime(a3653oe.getTime()+60*60*1000);document.cookie="a3653_pages="+a3653ops+ ";path=/;expires="+a3653oe.toGMTString();a3653ot=document.cookie.match(new RegExp("(^| )a3653_times=([^;]*)(;|$)"));if(a3653ot==null){a3653ot=1;}else{a3653ot=parseInt(unescape((a3653ot)[2])); a3653ot=(a3653ops==1)?(a3653ot+1):(a3653ot);}a3653oe.setTime(a3653oe.getTime()+365*24*60*60*1000);document.cookie="a3653_times="+a3653ot+";path=/;expires="+a3653oe.toGMTString();}catch(e){}
 try{if(document.cookie==""){a3653ops=-1;a3653ot=-1;}}catch(e){}
-a3653of=a3653sf;if(a3653pf!=="51la"){a3653of=a3653pf;}if(a3653tf!=="51la"){a3653of=a3653tf;}a3653op=a3653pu;try{lainframe}catch(e){a3653op=a3653su;}
+a3653of=a3653sf;if(a3653pf!=="51la"){a3653of=a3653pf;}if(a3653tf!=="51la"){a3653of=a3653tf;}a3653op=a3653su;
 a3653src='http://web.51.la:82/go.asp?svid=16&id=18973653&tpages='+a3653ops+'&ttimes='+a3653ot+'&tzone='+(0-a3653d.getTimezoneOffset()/60)+'&tcolor='+a3653color+'&sSize='+screen.width+','+screen.height+'&referrer='+escape(a3653of)+'&vpage='+escape(a3653op)+'&vvtime='+a3653d.getTime();
 setTimeout('a3653img = new Image;a3653img.src=a3653src;',0);

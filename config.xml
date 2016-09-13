@@ -8,7 +8,7 @@
         DeepAQ
     </author>
     <content src="index.html" />
-    <icon src="icon.png" />
+    <icon src="img/icon.png" />
     <platform name="android">
         <icon density="ldpi" src="res/icon/android/drawable-ldpi-icon.png" />
         <icon density="mdpi" src="res/icon/android/drawable-mdpi-icon.png" />

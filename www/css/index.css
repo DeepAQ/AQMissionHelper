@@ -12,6 +12,13 @@ body {
     -webkit-user-select: none;                  /* prevent copy paste, to allow, change 'none' to 'text' */
     margin: 0;
     font-family: sans-serif;
+    background-color: #e0f2f1;
+    color: #004d40;
+}
+
+a {
+    color: #00897b;
+    text-decoration: none;
 }
 
 #loading {
@@ -33,6 +40,8 @@ body {
 nav {
     height: 40px;
     display: flex;
+    background-color: #00695c;
+    color: #e0f2f1;
 }
 
 nav > section {
@@ -44,7 +53,7 @@ nav > section {
 
 nav .activate {
     font-weight: bold;
-    border-bottom: #000 solid 3px;
+    border-bottom: #e0f2f1 solid 3px;
 }
 
 .container {
@@ -72,10 +81,16 @@ nav .activate {
     flex: 1;
 }
 
-#mission_suggest > section {
+#mission_suggest > div {
+    background-color: #b2dfdb;
+    margin-top: 10px;
+    padding: 10px;
+    border-radius: 10px;
+}
+
+#mission_suggest > div > section {
     font-size: 20px;
     font-weight: bold;
-    margin-top: 20px;
 }
 
 #mission_list {
@@ -83,7 +98,6 @@ nav .activate {
 }
 
 .mission {
-    margin-top: 10px;
     line-height: 24px;
     min-height: 48px;
     display: -webkit-flex;
@@ -110,8 +124,11 @@ nav .activate {
     font-weight: bold;
 }
 
-.waypoint {
-    margin-top: 10px;
+.waypoint, .mission {
+    margin-top: 5px;
+    background-color: #b2dfdb;
+    padding: 5px 10px;
+    border-radius: 10px;
 }
 
 .waypoint > :first-child {
