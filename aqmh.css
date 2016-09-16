@@ -64,6 +64,33 @@ nav .activate {
     right: 0;
 }
 
+#map_container {
+    display: -webkit-flex;
+    display: flex;
+    -webkit-flex-direction: column;
+    flex-direction: column;
+}
+
+#amap {
+    -webkit-flex: 1;
+    flex: 1;
+}
+
+#mission_switch > div {
+    display: -webkit-flex;
+    display: flex;
+}
+
+#mission_switch > div > * {
+    margin: 5px 10px;
+}
+
+#mission_switch span {
+    -webkit-flex: 1;
+    flex: 1;
+    text-overflow: ellipsis;
+}
+
 #mission_container {
     width: auto;
     margin: 10px 20px;

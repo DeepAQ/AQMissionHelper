@@ -56,7 +56,7 @@ var app = {
     // Application Constructor
     initialize: function() {
         // init map view
-        app.map = new AMap.Map('map_container');
+        app.map = new AMap.Map('amap');
         app.map.plugin(['AMap.ToolBar', 'AMap.Scale'], function() {
             app.map.addControl(new AMap.ToolBar());
             app.map.addControl(new AMap.Scale());
@@ -161,11 +161,14 @@ var app = {
         var list = $('#mission_list_content');
         list.html('Loading ...');
         $.getJSON(url, function(result) {
-            list.html('');
             if (!result.mission) {
                 list.html('No Result _(:з」∠)_');
-            } else for (var key in result.mission) {
-                var mission = result.mission[key];
+                return;
+            }
+            list.html('');
+            app.result = result.mission;
+            for (var key in app.result) {
+                var mission = app.result[key];
                 var type = '';
                 if (mission.sequence == '1') {
                     type = 'Sequence';
@@ -175,7 +178,7 @@ var app = {
                     type = 'Hidden';
                 }
                 var gcjPos = wgstogcj.transform(mission.latitude, mission.longitude);
-                var content = '<div class="mission" data-missionid="' + mission.id + '">\
+                var content = '<div class="mission" data-index="' + key + '">\
                     <img src="https://ingressmm.com/icon/' + mission.code + '.jpg" />\
                     <div>\
                         <div>' + mission.name + '</div>\
@@ -183,6 +186,79 @@ var app = {
                     </div>\
                 </div>';
                 list.append(content);
+            }
+            app.calcDistance();
+        });
+    },
+
+    loadMission: function(index, show) {
+        var list = $('#mission_waypoints');
+        list.html('Loading mission waypoints ...');
+        var mission = app.result[index];
+        $.getJSON(app.datasrc + '/get_portal.php?mission=' + mission.id, function(result) {
+            list.html('');
+            if (app.map.markers) {
+                app.map.remove(app.map.markers);
+            }
+            app.map.markers = [];
+            var minLat = 90, maxLat = -90, minLng = 180, maxLng = -180;
+
+            if (!result.portal || result.portal.length == 0) {
+                list.html('Get portals failed _(:з」∠)_');
+            } else for (var key in result.portal) {
+                var waypoint = result.portal[key];
+                var content = '<div class="waypoint"><div>' + (Number(key)+1) + '. ';
+
+                var task_list = [
+                    "",
+                    "Hack this Portal",
+                    "Capture or Upgrade Portal",
+                    "Create Link from Portal",
+                    "Create Field from Portal",
+                    "Install a Mod on this Portal",
+                    "Enter the Passphrase",
+                    "View this Field Trip Waypoint",
+                    "Enter the Passphrase"
+                ];
+
+                if (waypoint[0]) {
+                    content = content + 'Waypoint Hidden' + '</div>';
+                } else {
+                    content = content + waypoint[2].name + '</div>';
+
+                    var gcjPos = wgstogcj.transform(waypoint[2].latitude, waypoint[2].longitude);
+                    if (gcjPos.lat < minLat) minLat = gcjPos.lat;
+                    if (gcjPos.lat > maxLat) maxLat = gcjPos.lat;
+                    if (gcjPos.lng < minLng) minLng = gcjPos.lng;
+                    if (gcjPos.lng > maxLng) maxLng = gcjPos.lng;
+
+                    content = content + '<div>' + task_list[waypoint[1]] + '</div>\
+                        <div><span class="distance" data-lat="' + gcjPos.lat + '" data-lng="' + gcjPos.lng + '"></span>\
+                        <a href="https://www.ingress.com/intel?ll=' + waypoint[2].latitude + ',' + waypoint[2].longitude + '" target="_blank">Intel</a>\
+                        <a href="javascript:">Walk</a>\
+                        <a href="javascript:">Drive</a>\
+                        <a href="javascript:">Transit</a></div>';
+
+                    var marker = new AMap.Marker({
+                        map: app.map,
+                        position: [gcjPos.lng, gcjPos.lat],
+                        offset: new AMap.Pixel(-16, -16),
+                        icon: 'https://ingressmm.com/img/p' + (Array(2).join(0)+(Number(key)+1)).slice(-2) + 'n.png'
+                    });
+                    app.map.markers.push(marker);
+                }
+                content = content + '</div>';
+                list.append(content);
+            }
+
+            var show_map = function() {
+                $('#mission_switch').show().find('span').html(mission.name).parent().attr('data-index', index);
+                app.map.setBounds(new AMap.Bounds([minLng, minLat], [maxLng, maxLat]));
+                app.switchTab('map');
+            };
+            $('#btn_show_map').click(show_map).show();
+            if (show) {
+                show_map();
             }
             app.calcDistance();
         });
@@ -275,6 +351,7 @@ $(function() {
         var name = $(this).parent().attr('data-name');
         app.performSearch(name);
     });
+
     $('#saved_list').on('click', 'a:last-child', function() {
         if (confirm("Are you sure to delete?")) {
             var key = $(this).parent().attr('data-key');
@@ -316,71 +393,15 @@ $(function() {
         $('#mission_list').hide();
         $('#mission_detail').show();
         $('#btn_show_map').hide();
-        var list = $('#mission_waypoints');
-        list.html('Loading mission waypoints ...');
 
-        $.getJSON(app.datasrc + '/get_portal.php?mission=' + $(this).attr('data-missionid'), function(result) {
-            list.html('');
-            if (app.map.markers) {
-                app.map.remove(app.map.markers);
-            }
-            app.map.markers = [];
-            var minLat = 90, maxLat = -90, minLng = 180, maxLng = -180;
+        app.loadMission($(this).attr('data-index'));
+    });
 
-            if (!result.portal || result.portal.length == 0) {
-                list.html('Get portals failed _(:з」∠)_');
-            } else for (var key in result.portal) {
-                var waypoint = result.portal[key];
-                var content = '<div class="waypoint"><div>' + (Number(key)+1) + '. ';
-
-                var task_list = [
-                    "",
-                    "Hack this Portal",
-                    "Capture or Upgrade Portal",
-                    "Create Link from Portal",
-                    "Create Field from Portal",
-                    "Install a Mod on this Portal",
-                    "Enter the Passphrase",
-                    "View this Field Trip Waypoint",
-                    "Enter the Passphrase"
-                ];
-
-                if (waypoint[0]) {
-                    content = content + 'Waypoint Hidden' + '</div>';
-                } else {
-                    content = content + waypoint[2].name + '</div>';
-
-                    var gcjPos = wgstogcj.transform(waypoint[2].latitude, waypoint[2].longitude);
-                    if (gcjPos.lat < minLat) minLat = gcjPos.lat;
-                    if (gcjPos.lat > maxLat) maxLat = gcjPos.lat;
-                    if (gcjPos.lng < minLng) minLng = gcjPos.lng;
-                    if (gcjPos.lng > maxLng) maxLng = gcjPos.lng;
-
-                    content = content + '<div>' + task_list[waypoint[1]] + '</div>\
-                        <div><span class="distance" data-lat="' + gcjPos.lat + '" data-lng="' + gcjPos.lng + '"></span>\
-                        <a href="https://www.ingress.com/intel?ll=' + waypoint[2].latitude + ',' + waypoint[2].longitude + '" target="_blank">Intel</a>\
-                        <a href="javascript:">Walk</a>\
-                        <a href="javascript:">Drive</a>\
-                        <a href="javascript:">Transit</a></div>';
-
-                    var marker = new AMap.Marker({
-                        map: app.map,
-                        position: [gcjPos.lng, gcjPos.lat],
-                        offset: new AMap.Pixel(-16, -16),
-                        icon: 'https://ingressmm.com/img/p' + (Array(2).join(0)+(Number(key)+1)).slice(-2) + 'n.png'
-                    });
-                    app.map.markers.push(marker);
-                }
-                content = content + '</div>';
-                list.append(content);
-            }
-            $('#btn_show_map').click(function() {
-                app.map.setBounds(new AMap.Bounds([minLng, minLat], [maxLng, maxLat]));
-                app.switchTab('map');
-            }).show();
-
-            app.calcDistance();
-        });
+    $('#mission_switch').find('a').click(function() {
+        var new_index = Number($(this).parent().attr('data-index')) + Number($(this).attr('data-delta'));
+        if (new_index < 0 || new_index >= app.result.length) return;
+        $(this).parent().find('span').html('Loading ...');
+        app.loadMission(new_index, true);
     });
 
     // init mission detail
