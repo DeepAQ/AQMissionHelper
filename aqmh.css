@@ -79,6 +79,8 @@ nav .activate {
 #mission_switch > div {
     display: -webkit-flex;
     display: flex;
+    height: 40px;
+    line-height: 30px;
 }
 
 #mission_switch > div > * {

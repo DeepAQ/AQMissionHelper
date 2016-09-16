@@ -192,8 +192,10 @@ var app = {
     },
 
     loadMission: function(index, show) {
+        $('#mission_detail_info').html($('#mission_list_content').children().eq(index).html());
         var list = $('#mission_waypoints');
         list.html('Loading mission waypoints ...');
+
         var mission = app.result[index];
         $.getJSON(app.datasrc + '/get_portal.php?mission=' + mission.id, function(result) {
             list.html('');
@@ -388,7 +390,6 @@ $(function() {
     });
 
     $('#mission_list').on('click', '.mission', function() {
-        $('#mission_detail_info').html($(this).html());
         $('#mission_search_box').hide();
         $('#mission_list').hide();
         $('#mission_detail').show();
