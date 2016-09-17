@@ -244,8 +244,8 @@ var app = {
                     var marker = new AMap.Marker({
                         map: app.map,
                         position: [gcjPos.lng, gcjPos.lat],
-                        offset: new AMap.Pixel(-16, -16),
-                        icon: 'https://ingressmm.com/img/p' + (Array(2).join(0)+(Number(key)+1)).slice(-2) + 'n.png'
+                        offset: new AMap.Pixel(-12, -12),
+                        content: '<div class="waypoint_marker">' + (Number(key)+1) + '</div>'
                     });
                     app.map.markers.push(marker);
                 }
