@@ -122,6 +122,11 @@ nav .activate {
     font-weight: bold;
 }
 
+#update {
+    background-color: #ffcdd2 !important;
+    display: none;
+}
+
 #mission_list {
     margin-top: 10px;
 }

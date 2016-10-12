@@ -76,9 +76,6 @@ var app = {
         app.loadRecent();
         app.loadSaved();
         app.loadTrending();
-        // load versions
-        $('#local_ver').load('version.html');
-        $('#online_ver').load(app.online_url + '/version.html');
         // prepare location
         if (window.location.href.substr(0, 4) == 'http') {
             // online version
@@ -121,6 +118,14 @@ var app = {
                 frequency: 100
             });
         }
+        // load versions
+        $('#local_ver').load('version.html', function() {
+            $('#online_ver').load(app.online_url + '/version.html', function(result) {
+                if (result && result != $('#local_ver').html() && window.AMapBridge) {
+                    $('#update').show();
+                }
+            });
+        });
     },
 
     finishLoading: function() {
@@ -414,9 +419,8 @@ $(function() {
         if (app.transport) {
             app.transport.clear();
         }
-        $('#mission_detail').hide();
-        $('#mission_search_box').show();
-        $('#mission_list').show();
+        $('#mission_switch, #mission_detail').hide();
+        $('#mission_search_box, #mission_list').show();
     });
 
     // init transport search
