@@ -171,7 +171,24 @@ var app = {
                 return;
             }
             list.html('');
-            app.result = result.mission;
+            // Smart Sort
+            var getNum = function(name) {
+                var regs = [/[(（\[]*(\d+)[)）\]\/]/i, /(\d+)$/i];
+                for (var key in regs) {
+                    var matches = name.match(regs[key]);
+                    if (matches && matches.length >= 2)
+                        return Number(matches[1]);
+                }
+                return false;
+            };
+            app.result = result.mission.sort(function(a, b) {
+                var aNum = getNum(a.name);
+                var bNum = getNum(b.name);
+                if (aNum === false) return 1;
+                if (bNum === false) return -1;
+                return aNum - bNum;
+            });
+
             for (var key in app.result) {
                 var mission = app.result[key];
                 var type = '';
@@ -395,6 +412,7 @@ $(function() {
     });
 
     $('#mission_list').on('click', '.mission', function() {
+        app.lastScroll = document.body.scrollTop;
         $('#mission_search_box').hide();
         $('#mission_list').hide();
         $('#mission_detail').show();
@@ -421,6 +439,7 @@ $(function() {
         }
         $('#mission_switch, #mission_detail').hide();
         $('#mission_search_box, #mission_list').show();
+        if (app.lastScroll) document.body.scrollTop = app.lastScroll;
     });
 
     // init transport search

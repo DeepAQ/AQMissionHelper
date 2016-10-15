@@ -12,10 +12,9 @@ Available for Android(App) and other platforms(Web).
 - Navigation to mission waypoints
 
 ## Changelog (latest)
-#### V1.2.1-161012:
-- fixed a bug in the mission navigation bar
-- press back button twice to exit on Android
-- update checking on Android
+### v1.3.0-161016:
+- **Introducing mission sort** : AQMissionHelper can now sort missions even if their names don't match the IngressMM naming rules. (this feature is in testing currently, feedbacks are welcome)
+- When going back from mission detail page, the mission list will scroll to the original position.
 
 
 ## Support
