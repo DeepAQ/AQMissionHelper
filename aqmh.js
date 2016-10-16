@@ -173,7 +173,7 @@ var app = {
             list.html('');
             // Smart Sort
             var getNum = function(name) {
-                var regs = [/[(（\[]*(\d+)[)）\]\/]/i, /(\d+)$/i];
+                var regs = [/[(（\[]*(\d+)[/)）\]]/i, /(\d+)$/i];
                 for (var key in regs) {
                     var matches = name.match(regs[key]);
                     if (matches && matches.length >= 2)
@@ -182,11 +182,12 @@ var app = {
                 return false;
             };
             app.result = result.mission.sort(function(a, b) {
-                var aNum = getNum(a.name);
-                var bNum = getNum(b.name);
-                if (aNum === false) return 1;
-                if (bNum === false) return -1;
-                return aNum - bNum;
+                if (a.number == undefined) a.number = getNum(a.name);
+                if (b.number == undefined) b.number = getNum(b.name);
+                if (a.number == b.number) return (a.name>b.name ? 1 : -1);
+                if (a.number === false) return 1;
+                if (b.number === false) return -1;
+                return a.number - b.number;
             });
 
             for (var key in app.result) {
