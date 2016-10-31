@@ -12,9 +12,10 @@ Available for Android(App) and other platforms(Web).
 - Navigation to mission waypoints
 
 ## Changelog (latest)
-### v1.3.0-161016:
-- **Introducing mission sort** : AQMissionHelper can now sort missions even if their names don't match the IngressMM naming rules. (this feature is in testing currently, feedbacks are welcome)
-- When going back from mission detail page, the mission list will scroll to the original position.
+### v1.3.1-161031:
+- Mission sort performance improvement
+- Mission names that contain spaces can be sorted now
+- Launch AQMissionHelper from other apps (eg. https://aqmh.azurewebsites.net/#q=Nanjing)
 
 
 ## Support

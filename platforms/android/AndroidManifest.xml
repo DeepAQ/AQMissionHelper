@@ -14,6 +14,12 @@
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:host="aqmh.azurewebsites.net" android:pathPrefix="/" android:scheme="https" />
+            </intent-filter>
         </activity>
         <service android:name="com.amap.api.location.APSService" />
         <meta-data android:name="com.amap.api.v2.apikey" android:value="92f2a8906b924832b9d1e3994453aadf" />

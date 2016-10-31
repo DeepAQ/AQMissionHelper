@@ -19,6 +19,8 @@
 
 package cn.imaq.missionhelper;
 
+import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.provider.Settings;
 import android.webkit.WebView;
@@ -33,7 +35,6 @@ import org.apache.cordova.*;
 
 public class MainActivity extends CordovaActivity
 {
-    private AMapLocationClient locationClient = null;
     private long backTime = 0;
 
     @Override
@@ -41,15 +42,16 @@ public class MainActivity extends CordovaActivity
     {
         super.onCreate(savedInstanceState);
         // Set by <content src="index.html" /> in config.xml
-        loadUrl(launchUrl);
+        this.onNewIntent(getIntent());
     }
 
     @Override
-    public void onDestroy() {
-        super.onDestroy();
-        if (locationClient != null) {
-            locationClient.stopLocation();
-            locationClient.onDestroy();
+    protected void onNewIntent(Intent intent) {
+        Uri uri = intent.getData();
+        if (uri != null) {
+            loadUrl(launchUrl + '?' + uri.getQuery() + '#' + uri.getFragment());
+        } else {
+            loadUrl(launchUrl);
         }
     }
 

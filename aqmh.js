@@ -131,6 +131,12 @@ var app = {
     finishLoading: function() {
         app.switchTab('mission');
         $('#loading').hide();
+        var query = location.hash.match(/^#q=(.+)/i);
+        if (query) {
+            var sb = $('#mission_search_box');
+            sb.find('input').val(decodeURIComponent(query[1]));
+            sb.find('button').click();
+        }
     },
 
     switchTab: function(tabName) {
@@ -291,6 +297,8 @@ var app = {
     },
 
     performSearch: function(key) {
+        key = encodeURIComponent(key);
+        location.hash = 'q=' + key;
         app.loadList(app.datasrc + '/get_mission.php?find=' + key + '&findby=0');
     },
 
@@ -408,6 +416,7 @@ $(function() {
 
     // init mission list
     $('#btn_list_back').click(function() {
+        location.hash = '';
         $('#btn_list_save').hide();
         $('#mission_list').hide();
         $('#mission_suggest').show();
