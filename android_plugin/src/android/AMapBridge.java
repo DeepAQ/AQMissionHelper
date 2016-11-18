@@ -23,6 +23,7 @@ public class AMapBridge extends CordovaPlugin {
         locationClient = new AMapLocationClient(cordova.getActivity().getApplicationContext());
         AMapLocationClientOption locationClientOption = new AMapLocationClientOption();
         locationClientOption.setGpsFirst(true);
+        locationClientOption.setInterval(1000);
         locationClient.setLocationOption(locationClientOption);
         locationClient.setLocationListener(new AMapLocationListener() {
             @Override
