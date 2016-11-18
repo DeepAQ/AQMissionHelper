@@ -29,4 +29,5 @@
     </platform>
     <plugin name="cordova-plugin-whitelist" spec="~1.2.2" />
     <plugin name="cordova-plugin-device-orientation" spec="~1.0.3" />
+    <engine name="android" spec="~6.0.0" />
 </widget>

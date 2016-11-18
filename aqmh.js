@@ -1,5 +1,6 @@
 /////////// begin WGS84 to GCJ-02 transformer /////////
-var WGS84transformer = function() {};
+var WGS84transformer = function () {
+};
 // Krasovsky 1940
 //
 // a = 6378245.0, 1/f = 298.3
@@ -8,8 +9,8 @@ var WGS84transformer = function() {};
 WGS84transformer.prototype.a = 6378245.0;
 WGS84transformer.prototype.ee = 0.00669342162296594323;
 
-WGS84transformer.prototype.transform = function(wgLat, wgLng) {
-    if(this.isOutOfMainlandChina(wgLat, wgLng))
+WGS84transformer.prototype.transform = function (wgLat, wgLng) {
+    if (this.isOutOfMainlandChina(wgLat, wgLng))
         return {lat: wgLat, lng: wgLng};
     dLat = this.transformLat(wgLng - 105.0, wgLat - 35.0);
     dLng = this.transformLng(wgLng - 105.0, wgLat - 35.0);
@@ -24,14 +25,14 @@ WGS84transformer.prototype.transform = function(wgLat, wgLng) {
     return {lat: mgLat, lng: mgLng};
 };
 
-WGS84transformer.prototype.isOutOfMainlandChina = function(lat, lng) {
-    if(lat >= 21.8 && lat <= 25.3 && lng >= 120.0 && lng <= 122.0) return true;
-    if(lng < 72.004 || lng > 137.8347) return true;
-    if(lat < 0.8293 || lat > 55.8271) return true;
+WGS84transformer.prototype.isOutOfMainlandChina = function (lat, lng) {
+    if (lat >= 21.8 && lat <= 25.3 && lng >= 120.0 && lng <= 122.0) return true;
+    if (lng < 72.004 || lng > 137.8347) return true;
+    if (lat < 0.8293 || lat > 55.8271) return true;
     return false;
 };
 
-WGS84transformer.prototype.transformLat = function(x, y) {
+WGS84transformer.prototype.transformLat = function (x, y) {
     var ret = -100.0 + 2.0 * x + 3.0 * y + 0.2 * y * y + 0.1 * x * y + 0.2 * Math.sqrt(Math.abs(x));
     ret += (20.0 * Math.sin(6.0 * x * Math.PI) + 20.0 * Math.sin(2.0 * x * Math.PI)) * 2.0 / 3.0;
     ret += (20.0 * Math.sin(y * Math.PI) + 40.0 * Math.sin(y / 3.0 * Math.PI)) * 2.0 / 3.0;
@@ -39,7 +40,7 @@ WGS84transformer.prototype.transformLat = function(x, y) {
     return ret;
 };
 
-WGS84transformer.prototype.transformLng = function(x, y) {
+WGS84transformer.prototype.transformLng = function (x, y) {
     var ret = 300.0 + x + 2.0 * y + 0.1 * x * x + 0.1 * x * y + 0.1 * Math.sqrt(Math.abs(x));
     ret += (20.0 * Math.sin(6.0 * x * Math.PI) + 20.0 * Math.sin(2.0 * x * Math.PI)) * 2.0 / 3.0;
     ret += (20.0 * Math.sin(x * Math.PI) + 40.0 * Math.sin(x / 3.0 * Math.PI)) * 2.0 / 3.0;
@@ -54,10 +55,10 @@ var app = {
     online_url: 'https://aqmh.azurewebsites.net',
 
     // Application Constructor
-    initialize: function() {
+    initialize: function () {
         // init map view
         app.map = new AMap.Map('amap');
-        app.map.plugin(['AMap.ToolBar', 'AMap.Scale'], function() {
+        app.map.plugin(['AMap.ToolBar', 'AMap.Scale'], function () {
             app.map.addControl(new AMap.ToolBar());
             app.map.addControl(new AMap.Scale());
         });
@@ -88,39 +89,42 @@ var app = {
     },
 
     // deviceready Event Handler
-    onDeviceReady: function() {
+    onDeviceReady: function () {
         if (window.AMapBridge) {
             // Android client
-            var amapUpdate = function() {
-                AMapBridge.getLocation(function(result) {
+            var amapUpdate = function () {
+                AMapBridge.getLocation(function (result) {
                     if (!result.lat || !result.lng) return;
                     app.updateLocation(result.lat, result.lng);
-                    setTimeout(amapUpdate, 1000);
                 });
             };
-            amapUpdate();
+            setInterval(amapUpdate, 1000);
         } else {
-            navigator.geolocation.watchPosition(function(result) {
-                if (result.coords.accuracy == null) return;
-                var pos = wgstogcj.transform(result.coords.latitude, result.coords.longitude);
-                app.updateLocation(pos.lat, pos.lng);
-            }, null, {
-                enableHighAccuracy: true
-            });
+            // other browsers
+            var geoUpdate = function () {
+                navigator.geolocation.getCurrentPosition(function (result) {
+                    if (result.coords.accuracy == null) return;
+                    var pos = wgstogcj.transform(result.coords.latitude, result.coords.longitude);
+                    app.updateLocation(pos.lat, pos.lng);
+                }, null, {
+                    enableHighAccuracy: true
+                });
+            };
+            setInterval(geoUpdate, 1000);
         }
         // Device orientation
         if (navigator.compass) {
             app.location.circle.setIcon('img/loc_o.png');
             app.location.circle.setOffset(new AMap.Pixel(-11.5, -13.5));
-            navigator.compass.watchHeading(function(heading) {
+            navigator.compass.watchHeading(function (heading) {
                 app.location.circle.setAngle(heading.magneticHeading);
             }, null, {
                 frequency: 100
             });
         }
         // load versions
-        $('#local_ver').load('version.html', function() {
-            $('#online_ver').load(app.online_url + '/version.html', function(result) {
+        $('#local_ver').load('version.html', function () {
+            $('#online_ver').load(app.online_url + '/version.html', function (result) {
                 if (result && result != $('#local_ver').html() && window.AMapBridge) {
                     $('#update').show();
                 }
@@ -128,7 +132,7 @@ var app = {
         });
     },
 
-    finishLoading: function() {
+    finishLoading: function () {
         app.switchTab('mission');
         $('#loading').hide();
         var query = location.hash.match(/^#q=(.+)/i);
@@ -139,11 +143,11 @@ var app = {
         }
     },
 
-    switchTab: function(tabName) {
+    switchTab: function (tabName) {
         $('.container').hide();
         $('#' + tabName + '_container').show();
 
-        $('nav').find('section').each(function() {
+        $('nav').find('section').each(function () {
             if ($(this).attr('data-item') == tabName) {
                 $(this).addClass('activate');
             } else {
@@ -152,7 +156,7 @@ var app = {
         });
     },
 
-    updateLocation: function(lat, lng) {
+    updateLocation: function (lat, lng) {
         app.location.lat = lat;
         app.location.lng = lng;
         app.calcDistance();
@@ -166,19 +170,19 @@ var app = {
         }
     },
 
-    loadList: function(url) {
+    loadList: function (url) {
         $('#mission_suggest').hide();
         $('#mission_list').show();
         var list = $('#mission_list_content');
         list.html('Loading ...');
-        $.getJSON(url, function(result) {
+        $.getJSON(url, function (result) {
             if (!result.mission) {
                 list.html('No Result _(:з」∠)_');
                 return;
             }
             list.html('');
             // Smart Sort
-            var getNum = function(name) {
+            var getNum = function (name) {
                 name = name.replace(/\s/g, "");
                 var regs = [/[(（\[]*(\d+)[/)）\]]/i, /(\d+)$/i];
                 for (var key in regs) {
@@ -188,10 +192,10 @@ var app = {
                 }
                 return false;
             };
-            app.result = result.mission.sort(function(a, b) {
+            app.result = result.mission.sort(function (a, b) {
                 if (a.number == undefined) a.number = getNum(a.name);
                 if (b.number == undefined) b.number = getNum(b.name);
-                if (a.number == b.number) return (a.name>b.name ? 1 : -1);
+                if (a.number == b.number) return (a.name > b.name ? 1 : -1);
                 if (a.number === false) return 1;
                 if (b.number === false) return -1;
                 return a.number - b.number;
@@ -221,13 +225,13 @@ var app = {
         });
     },
 
-    loadMission: function(index, show) {
+    loadMission: function (index, show) {
         $('#mission_detail_info').html($('#mission_list_content').children().eq(index).html());
         var list = $('#mission_waypoints');
         list.html('Loading mission waypoints ...');
 
         var mission = app.result[index];
-        $.getJSON(app.datasrc + '/get_portal.php?mission=' + mission.id, function(result) {
+        $.getJSON(app.datasrc + '/get_portal.php?mission=' + mission.id, function (result) {
             list.html('');
             if (app.map.markers) {
                 app.map.remove(app.map.markers);
@@ -239,7 +243,7 @@ var app = {
                 list.html('Get portals failed _(:з」∠)_');
             } else for (var key in result.portal) {
                 var waypoint = result.portal[key];
-                var content = '<div class="waypoint"><div>' + (Number(key)+1) + '. ';
+                var content = '<div class="waypoint"><div>' + (Number(key) + 1) + '. ';
 
                 var task_list = [
                     "",
@@ -275,7 +279,7 @@ var app = {
                         map: app.map,
                         position: [gcjPos.lng, gcjPos.lat],
                         offset: new AMap.Pixel(-12, -12),
-                        content: '<div class="waypoint_marker">' + (Number(key)+1) + '</div>'
+                        content: '<div class="waypoint_marker">' + (Number(key) + 1) + '</div>'
                     });
                     app.map.markers.push(marker);
                 }
@@ -283,7 +287,7 @@ var app = {
                 list.append(content);
             }
 
-            var show_map = function() {
+            var show_map = function () {
                 $('#mission_switch').show().find('span').html(mission.name).parent().attr('data-index', index);
                 app.map.setBounds(new AMap.Bounds([minLng, minLat], [maxLng, maxLat]));
                 app.switchTab('map');
@@ -296,21 +300,21 @@ var app = {
         });
     },
 
-    performSearch: function(key) {
+    performSearch: function (key) {
         key = encodeURIComponent(key);
         location.hash = 'q=' + key;
         app.loadList(app.datasrc + '/get_mission.php?find=' + key + '&findby=0');
     },
 
-    calcDistance: function() {
-        $('.distance').each(function() {
+    calcDistance: function () {
+        $('.distance').each(function () {
             var lat = Number($(this).attr('data-lat'));
             var lng = Number($(this).attr('data-lng'));
             $(this).html(Math.ceil(new AMap.LngLat(lng, lat).distance([app.location.lng, app.location.lat])) + 'm');
         });
     },
 
-    loadRecent: function() {
+    loadRecent: function () {
         var list = $('#recent_list');
         list.html('No recent searches');
         if (!localStorage.recent_search) return;
@@ -318,12 +322,13 @@ var app = {
             var recent = JSON.parse(localStorage.recent_search);
             list.html('');
             for (var key in recent) {
-                list.prepend('<div data-name="'+recent[key]+'"><a href="javascript:">'+recent[key]+'</a></div>');
+                list.prepend('<div data-name="' + recent[key] + '"><a href="javascript:">' + recent[key] + '</a></div>');
             }
-        } catch (e) {}
+        } catch (e) {
+        }
     },
 
-    loadSaved: function() {
+    loadSaved: function () {
         var list = $('#saved_list');
         list.html('No saved searches');
         if (!localStorage.saved_search) return;
@@ -331,33 +336,34 @@ var app = {
             var saved = JSON.parse(localStorage.saved_search);
             list.html('');
             for (var key in saved) {
-                list.prepend('<div data-name="'+saved[key]+'" data-key="'+key+'">\
-                    <a href="javascript:">'+key+'</a> <a href="javascript:">[Delete]</a>\
+                list.prepend('<div data-name="' + saved[key] + '" data-key="' + key + '">\
+                    <a href="javascript:">' + key + '</a> <a href="javascript:">[Delete]</a>\
                 </div>');
             }
-        } catch (e) {}
+        } catch (e) {
+        }
     },
 
-    loadTrending: function() {
+    loadTrending: function () {
         $.getScript(app.online_url + '/trending.aq');
     },
 };
 
-$(function() {
+$(function () {
     // init loading
-    $('#skip').click(function() {
+    $('#skip').click(function () {
         app.location.firstFix = false;
         app.finishLoading();
     });
 
     // init nav bar
-    $('nav').find('section').click(function() {
+    $('nav').find('section').click(function () {
         if ($(this).hasClass('activate')) return;
         app.switchTab($(this).attr('data-item'));
     });
 
     // init mission search
-    $('#mission_search_box').find('button').click(function() {
+    $('#mission_search_box').find('button').click(function () {
         var key = $('#mission_search_box').find('input').val();
         if ($.trim(key) == '') return;
         $('#mission_list').show();
@@ -368,7 +374,8 @@ $(function() {
         if (localStorage.recent_search) {
             try {
                 data = JSON.parse(localStorage.recent_search);
-            } catch (e) {}
+            } catch (e) {
+            }
         }
         if ($.inArray(key, data) == -1) {
             data.push(key);
@@ -381,25 +388,26 @@ $(function() {
     });
 
     // init mission suggest
-    $('#saved_list, #recent_list').on('click', 'a:first-child', function() {
+    $('#saved_list, #recent_list').on('click', 'a:first-child', function () {
         var name = $(this).parent().attr('data-name');
         app.performSearch(name);
     });
 
-    $('#saved_list').on('click', 'a:last-child', function() {
+    $('#saved_list').on('click', 'a:last-child', function () {
         if (confirm("Are you sure to delete?")) {
             var key = $(this).parent().attr('data-key');
             try {
                 var saved = JSON.parse(localStorage.saved_search);
                 delete saved[key];
                 localStorage.saved_search = JSON.stringify(saved);
-            } catch (e) {}
+            } catch (e) {
+            }
         }
         app.loadSaved();
     });
 
     // init search save
-    $('#btn_list_save').click(function() {
+    $('#btn_list_save').click(function () {
         var input = $('#mission_search_box').find('input').val();
         var name = prompt("Save as :", input);
         if (name == null) return;
@@ -407,7 +415,8 @@ $(function() {
         if (localStorage.saved_search) {
             try {
                 data = JSON.parse(localStorage.saved_search);
-            } catch (e) {}
+            } catch (e) {
+            }
         }
         data[name] = input;
         localStorage.saved_search = JSON.stringify(data);
@@ -415,14 +424,14 @@ $(function() {
     });
 
     // init mission list
-    $('#btn_list_back').click(function() {
+    $('#btn_list_back').click(function () {
         location.hash = '';
         $('#btn_list_save').hide();
         $('#mission_list').hide();
         $('#mission_suggest').show();
     });
 
-    $('#mission_list').on('click', '.mission', function() {
+    $('#mission_list').on('click', '.mission', function () {
         app.lastScroll = document.body.scrollTop;
         $('#mission_search_box').hide();
         $('#mission_list').hide();
@@ -432,7 +441,7 @@ $(function() {
         app.loadMission($(this).attr('data-index'));
     });
 
-    $('#mission_switch').find('a').click(function() {
+    $('#mission_switch').find('a').click(function () {
         var new_index = Number($(this).parent().attr('data-index')) + Number($(this).attr('data-delta'));
         if (new_index < 0 || new_index >= app.result.length) return;
         $(this).parent().find('span').html('Loading ...');
@@ -440,7 +449,7 @@ $(function() {
     });
 
     // init mission detail
-    $('#btn_detail_back').click(function() {
+    $('#btn_detail_back').click(function () {
         if (app.map.markers) {
             app.map.remove(app.map.markers);
             app.map.markers = [];
@@ -454,13 +463,13 @@ $(function() {
     });
 
     // init transport search
-    $('#mission_waypoints').on('click', 'a', function() {
+    $('#mission_waypoints').on('click', 'a', function () {
         var _this = $(this);
         if (_this.html() == 'Intel') return;
         if (app.transport) {
             app.transport.clear();
         }
-        AMap.service(['AMap.Walking', 'AMap.Driving', 'AMap.Transfer'], function() {
+        AMap.service(['AMap.Walking', 'AMap.Driving', 'AMap.Transfer'], function () {
             var param = {
                 map: app.map,
                 panel: 'route_container',
@@ -484,7 +493,7 @@ $(function() {
             var target = _this.parent().find('.distance');
             app.transport.search([app.location.lng, app.location.lat],
                 [Number(target.attr('data-lng')), Number(target.attr('data-lat'))],
-                function(status, result) {
+                function (status, result) {
                     if (status != 'complete' || !result.info) {
                         alert('No route found _(:з」∠)_');
                         app.switchTab('mission');
@@ -500,7 +509,7 @@ $(function() {
 
 // analyze
 var _hmt = _hmt || [];
-(function() {
+(function () {
     var hm = document.createElement("script");
     hm.src = "//hm.baidu.com/hm.js?f4d807d64f88ea0422d095decf0430f4";
     var s = document.getElementsByTagName("script")[0];
