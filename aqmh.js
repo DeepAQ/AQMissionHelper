@@ -183,7 +183,7 @@ var app = {
             list.html('');
             // Smart Sort
             var getNum = function (name) {
-                name = name.replace(/\s/g, "");
+                name = name.replace(/[\s-]/g, "");
                 var regs = [/[(（\[]*(\d+)[/)）\]]/i, /(\d+)$/i];
                 for (var key in regs) {
                     var matches = name.match(regs[key]);
