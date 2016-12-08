@@ -52,6 +52,7 @@ WGS84transformer.prototype.transformLng = function (x, y) {
 var wgstogcj = new WGS84transformer();
 
 var app = {
+    data: {},
     online_url: 'https://aqmh.azurewebsites.net',
 
     // Application Constructor
@@ -135,11 +136,9 @@ var app = {
     finishLoading: function () {
         app.switchTab('mission');
         $('#loading').hide();
-        var query = location.hash.match(/^#q=(.+)/i);
+        var query = location.hash.match(/^#q=([^&]+)(&qt=)*([^&]*)$/i);
         if (query) {
-            var sb = $('#mission_search_box');
-            sb.find('input').val(decodeURIComponent(query[1]));
-            sb.find('button').click();
+            app.performSearch(decodeURIComponent(query[1]), decodeURIComponent(query[3]));
         }
     },
 
@@ -170,59 +169,64 @@ var app = {
         }
     },
 
-    loadList: function (url) {
+    loadList: function (url, type) {
+        if (!type) {
+            type = 'ingressmm';
+        }
         $('#mission_suggest').hide();
         $('#mission_list').show();
-        var list = $('#mission_list_content');
-        list.html('Loading ...');
-        $.getJSON(url, function (result) {
-            if (!result.mission) {
-                list.html('No Result _(:з」∠)_');
-                return;
-            }
-            list.html('');
-            // Smart Sort
-            var getNum = function (name) {
-                name = name.replace(/[\s-]/g, "");
-                var regs = [/[(（\[]*(\d+)[/)）\]]/i, /(\d+)$/i];
-                for (var key in regs) {
-                    var matches = name.match(regs[key]);
-                    if (matches && matches.length >= 2)
-                        return Number(matches[1]);
-                }
-                return false;
-            };
-            app.result = result.mission.sort(function (a, b) {
-                if (a.number == undefined) a.number = getNum(a.name);
-                if (b.number == undefined) b.number = getNum(b.name);
-                if (a.number == b.number) return (a.name > b.name ? 1 : -1);
-                if (a.number === false) return 1;
-                if (b.number === false) return -1;
-                return a.number - b.number;
-            });
+        $('#mission_list_content').html('Loading ...');
+        $.get(url, app.data[type].parseList);
+    },
 
-            for (var key in app.result) {
-                var mission = app.result[key];
-                var type = '';
-                if (mission.sequence == '1') {
-                    type = 'Sequence';
-                } else if (mission.sequence == '2') {
-                    type = 'Any Order';
-                } else {
-                    type = 'Hidden';
-                }
-                var gcjPos = wgstogcj.transform(mission.latitude, mission.longitude);
-                var content = '<div class="mission" data-index="' + key + '">\
-                    <img src="https://ingressmm.com/icon/' + mission.code + '.jpg" />\
+    loadListCallback: function (result) {
+        var list = $('#mission_list_content');
+        if (!result || result.length == 0) {
+            list.html('No Result _(:з」∠)_');
+            return;
+        }
+        list.html('');
+        // Smart Sort
+        var getNum = function (name) {
+            name = name.replace(/[\s-]/g, "");
+            var regs = [/[(（\[]*(\d+)[/)）\]]/i, /(\d+)$/i];
+            for (var i in regs) {
+                var matches = name.match(regs[i]);
+                if (matches && matches.length >= 2)
+                    return Number(matches[1]);
+            }
+            return false;
+        };
+        app.list = result.sort(function (a, b) {
+            if (a.number == undefined) a.number = getNum(a.name);
+            if (b.number == undefined) b.number = getNum(b.name);
+            if (a.number == b.number) return (a.name > b.name ? 1 : -1);
+            if (a.number === false) return 1;
+            if (b.number === false) return -1;
+            return a.number - b.number;
+        });
+
+        for (var i in app.list) {
+            var mission = app.list[i];
+            var type = 'Hidden';
+            if (mission.seq == 1) {
+                type = 'Sequential';
+            } else if (mission.seq == 2) {
+                type = 'Any Order';
+            } else if (mission.seq == 3) {
+                type = 'Unknown';
+            }
+            var gcjPos = wgstogcj.transform(mission.lat, mission.lng);
+            var content = '<div class="mission" data-index="' + i + '">\
+                    <img src="' + mission.icon + '" />\
                     <div>\
                         <div>' + mission.name + '</div>\
                         <div>' + type + ' <span class="distance" data-lat="' + gcjPos.lat + '" data-lng="' + gcjPos.lng + '"></span></div>\
                     </div>\
                 </div>';
-                list.append(content);
-            }
-            app.calcDistance();
-        });
+            list.append(content);
+        }
+        app.calcDistance();
     },
 
     loadMission: function (index, show) {
@@ -230,8 +234,8 @@ var app = {
         var list = $('#mission_waypoints');
         list.html('Loading mission waypoints ...');
 
-        var mission = app.result[index];
-        $.getJSON(app.datasrc + '/get_portal.php?mission=' + mission.id, function (result) {
+        var mission = app.list[index];
+        app.data[mission.type].getPortals(mission, function (result) {
             list.html('');
             if (app.map.markers) {
                 app.map.remove(app.map.markers);
@@ -239,11 +243,11 @@ var app = {
             app.map.markers = [];
             var minLat = 90, maxLat = -90, minLng = 180, maxLng = -180;
 
-            if (!result.portal || result.portal.length == 0) {
+            if (!result || result.length == 0) {
                 list.html('Get portals failed _(:з」∠)_');
-            } else for (var key in result.portal) {
-                var waypoint = result.portal[key];
-                var content = '<div class="waypoint"><div>' + (Number(key) + 1) + '. ';
+            } else for (var i in result) {
+                var waypoint = result[i];
+                var content = '<div class="waypoint"><div>' + (Number(i) + 1) + '. ';
 
                 var task_list = [
                     "",
@@ -257,20 +261,20 @@ var app = {
                     "Enter the Passphrase"
                 ];
 
-                if (waypoint[0]) {
+                if (waypoint.hidden) {
                     content = content + 'Waypoint Hidden' + '</div>';
                 } else {
-                    content = content + waypoint[2].name + '</div>';
+                    content = content + waypoint.name + '</div>';
 
-                    var gcjPos = wgstogcj.transform(waypoint[2].latitude, waypoint[2].longitude);
+                    var gcjPos = wgstogcj.transform(waypoint.lat, waypoint.lng);
                     if (gcjPos.lat < minLat) minLat = gcjPos.lat;
                     if (gcjPos.lat > maxLat) maxLat = gcjPos.lat;
                     if (gcjPos.lng < minLng) minLng = gcjPos.lng;
                     if (gcjPos.lng > maxLng) maxLng = gcjPos.lng;
 
-                    content = content + '<div>' + task_list[waypoint[1]] + '</div>\
+                    content = content + '<div>' + task_list[waypoint.task] + '</div>\
                         <div><span class="distance" data-lat="' + gcjPos.lat + '" data-lng="' + gcjPos.lng + '"></span>\
-                        <a href="https://www.ingress.com/intel?ll=' + waypoint[2].latitude + ',' + waypoint[2].longitude + '" target="_blank">Intel</a>\
+                        <a href="https://www.ingress.com/intel?ll=' + waypoint.lat + ',' + waypoint.lng + '" target="_blank">Intel</a>\
                         <a href="javascript:">Walk</a>\
                         <a href="javascript:">Drive</a>\
                         <a href="javascript:">Transit</a></div>';
@@ -279,7 +283,7 @@ var app = {
                         map: app.map,
                         position: [gcjPos.lng, gcjPos.lat],
                         offset: new AMap.Pixel(-12, -12),
-                        content: '<div class="waypoint_marker">' + (Number(key) + 1) + '</div>'
+                        content: '<div class="waypoint_marker">' + (Number(i) + 1) + '</div>'
                     });
                     app.map.markers.push(marker);
                 }
@@ -300,10 +304,16 @@ var app = {
         });
     },
 
-    performSearch: function (key) {
+    performSearch: function (key, type) {
+        if (!type) {
+            type = 'ingressmm';
+        }
+        var search_box = $('#mission_search_box');
+        search_box.find('input').val(key);
         key = encodeURIComponent(key);
-        location.hash = 'q=' + key;
-        app.loadList(app.datasrc + '/get_mission.php?find=' + key + '&findby=0');
+        location.hash = 'q=' + key + '&qt=' + type;
+        search_box.find('select').val(type);
+        app.data[type].search(key);
     },
 
     calcDistance: function () {
@@ -321,8 +331,12 @@ var app = {
         try {
             var recent = JSON.parse(localStorage.recent_search);
             list.html('');
-            for (var key in recent) {
-                list.prepend('<div data-name="' + recent[key] + '"><a href="javascript:">' + recent[key] + '</a></div>');
+            for (var i in recent) {
+                if (recent[i].key) {
+                    list.prepend('<div data-name="' + recent[i].key + '" data-type="' + recent[i].type + '"><a href="javascript:">' + recent[i].key + ' (' + recent[i].type + ')</a></div>');
+                } else {
+                    list.prepend('<div data-name="' + recent[i] + '" data-type="ingressmm"><a href="javascript:">' + recent[i] + ' (ingressmm)</a></div>');
+                }
             }
         } catch (e) {
         }
@@ -336,9 +350,11 @@ var app = {
             var saved = JSON.parse(localStorage.saved_search);
             list.html('');
             for (var key in saved) {
-                list.prepend('<div data-name="' + saved[key] + '" data-key="' + key + '">\
-                    <a href="javascript:">' + key + '</a> <a href="javascript:">[Delete]</a>\
-                </div>');
+                if (saved[key].key) {
+                    list.prepend('<div data-name="' + saved[key].key + '" data-type="' + saved[key].type + '" data-key="' + key + '"><a href="javascript:">' + key + ' (' + saved[key].type + ')</a> <a href="javascript:">[Delete]</a></div>');
+                } else {
+                    list.prepend('<div data-name="' + saved[key] + '" data-type="ingressmm" data-key="' + key + '"><a href="javascript:">' + key + ' (ingressmm)</a> <a href="javascript:">[Delete]</a></div>');
+                }
             }
         } catch (e) {
         }
@@ -346,7 +362,7 @@ var app = {
 
     loadTrending: function () {
         $.getScript(app.online_url + '/trending.aq');
-    },
+    }
 };
 
 $(function () {
@@ -363,12 +379,14 @@ $(function () {
     });
 
     // init mission search
-    $('#mission_search_box').find('button').click(function () {
-        var key = $('#mission_search_box').find('input').val();
-        if ($.trim(key) == '') return;
+    var search_box = $('#mission_search_box');
+    var search_submit = function () {
+        var key = $.trim(search_box.find('input').val());
+        var type = search_box.find('select').val();
+        if (key == '') return;
         $('#mission_list').show();
         $('#btn_list_save').show();
-        app.performSearch(key);
+        app.performSearch(key, type);
         // save to recent searches
         var data = [];
         if (localStorage.recent_search) {
@@ -377,20 +395,28 @@ $(function () {
             } catch (e) {
             }
         }
-        if ($.inArray(key, data) == -1) {
-            data.push(key);
+        var search = {key: key, type: type};
+        if (localStorage.recent_search.indexOf(JSON.stringify(search)) == -1) {
+            data.push(search);
             while (data.length > 5) {
                 data.shift();
             }
         }
         localStorage.recent_search = JSON.stringify(data);
         app.loadRecent();
+    };
+    search_box.find('button').click(search_submit);
+    search_box.find('input').keypress(function (e) {
+        if (e.which == 13) {
+            search_submit();
+        }
     });
 
     // init mission suggest
     $('#saved_list, #recent_list').on('click', 'a:first-child', function () {
         var name = $(this).parent().attr('data-name');
-        app.performSearch(name);
+        var type = $(this).parent().attr('data-type');
+        app.performSearch(name, type);
     });
 
     $('#saved_list').on('click', 'a:last-child', function () {
@@ -408,9 +434,10 @@ $(function () {
 
     // init search save
     $('#btn_list_save').click(function () {
-        var input = $('#mission_search_box').find('input').val();
+        var input = search_box.find('input').val();
+        var type = search_box.find('select').val();
         var name = prompt("Save as :", input);
-        if (name == null) return;
+        if (!name) return;
         var data = {};
         if (localStorage.saved_search) {
             try {
@@ -418,7 +445,10 @@ $(function () {
             } catch (e) {
             }
         }
-        data[name] = input;
+        data[name] = {
+            key: input,
+            type: type
+        };
         localStorage.saved_search = JSON.stringify(data);
         app.loadSaved();
     });
@@ -433,7 +463,7 @@ $(function () {
 
     $('#mission_list').on('click', '.mission', function () {
         app.lastScroll = document.body.scrollTop;
-        $('#mission_search_box').hide();
+        search_box.hide();
         $('#mission_list').hide();
         $('#mission_detail').show();
         $('#btn_show_map').hide();
@@ -443,7 +473,7 @@ $(function () {
 
     $('#mission_switch').find('a').click(function () {
         var new_index = Number($(this).parent().attr('data-index')) + Number($(this).attr('data-delta'));
-        if (new_index < 0 || new_index >= app.result.length) return;
+        if (new_index < 0 || new_index >= app.list.length) return;
         $(this).parent().find('span').html('Loading ...');
         app.loadMission(new_index, true);
     });

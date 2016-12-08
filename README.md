@@ -12,14 +12,14 @@ Available for Android(App) and other platforms(Web).
 - Navigation to mission waypoints
 
 ## Changelog (latest)
-### v1.3.1-161031:
-- Mission sort performance improvement
-- Mission names that contain spaces can be sorted now
-- Launch AQMissionHelper from other apps (eg. https://aqmh.azurewebsites.net/#q=Nanjing)
-
+### v1.4.0-161208:
+- Searching in [IngressMosaik](https://ingressmosaik.com)! (beta)
+- Mission sort now supports X-Y format
+- Fix iOS 10 geolocation issue
 
 ## Support
-- [Website](http://imaq.cn/mh)
+- [Website](http://imaq.cn/mh/?ref=github)
+- [Feedback](http://imaq.cn/mh/feedback)
 - [Telegram channel for announcements](https://telegram.me/AQMissionHelper)
 
 ## License
