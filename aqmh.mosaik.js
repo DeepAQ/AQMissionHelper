@@ -31,7 +31,7 @@ app.data.mosaik = {
                     list.push({
                         type: 'mosaik',
                         name: mission.data.dap,
-                        seq: 3,
+                        seq: 9,
                         lat: mission.latLng[0],
                         lng: mission.latLng[1],
                         icon: mission.data.image,

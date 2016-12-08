@@ -213,7 +213,7 @@ var app = {
                 type = 'Sequential';
             } else if (mission.seq == 2) {
                 type = 'Any Order';
-            } else if (mission.seq == 3) {
+            } else if (mission.seq == 9) {
                 type = 'Unknown';
             }
             var gcjPos = wgstogcj.transform(mission.lat, mission.lng);
