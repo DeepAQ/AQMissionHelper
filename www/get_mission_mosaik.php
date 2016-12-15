@@ -5,17 +5,22 @@ if (empty($kw)) {
     exit("Param error");
 }
 
-$search = get_url('https://ingressmosaik.com/search?f=' . urlencode($kw));
+$search = @file_get_contents('https://ingressmosaik.com/search?f=' . urlencode($kw));
 //echo $search;
 
 $result = [];
 
 // process mosaics
 if (preg_match_all('/mosaic\/(\d+)"/', $search, $a)) {
+    $count = 0;
     foreach ($a[1] as $mosaic_id) {
-        $mosaic = get_url('https://ingressmosaik.com/mosaic/' . $mosaic_id);
-        if (preg_match('/var lang_txt_M = (.+);.*function infoHide/s', $mosaic, $b)) {
-            $result[] = str_replace("'", '"', $b[1]);
+        $count++;
+        if ($count > 2) {
+            break;
+        }
+        $mosaic = @file_get_contents('https://ingressmosaik.com/mosaic/' . $mosaic_id);
+        if (preg_match('/\{"id":(.+);.*function infoHide/s', $mosaic, $b)) {
+            $result[] = '[0,0,0,{"id":' . $b[1]; //str_replace("'", '"', $b[1]);
         }
     }
 }
@@ -28,10 +33,6 @@ function get_url($url)
     curl_setopt($ch, CURLOPT_URL, $url);
     curl_setopt($ch, CURLOPT_HEADER, false);
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-    if (substr($url, 0, 5) == 'https') {
-        curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
-        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-    }
     $s = curl_exec($ch);
     curl_close($ch);
     return $s;
