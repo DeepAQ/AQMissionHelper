@@ -7,17 +7,35 @@ app.data.ingressmm = {
         var list = [];
         try {
             var json = JSON.parse(result);
+            // Smart Sort
+            var getNum = function (name) {
+                name = name.replace(/[\s-]/g, "");
+                var regs = [/[(（\[]*(\d+)[/)）\]]/i, /(\d+)$/i];
+                for (var i in regs) {
+                    var matches = name.match(regs[i]);
+                    if (matches && matches.length >= 2)
+                        return Number(matches[1]);
+                }
+                return false;
+            };
             for (var key in json.mission) {
                 list.push({
                     type: 'ingressmm',
                     id: json.mission[key].id,
                     name: json.mission[key].name,
+                    number: getNum(json.mission[key].name),
                     seq: json.mission[key].sequence,
                     lat: json.mission[key].latitude,
                     lng: json.mission[key].longitude,
                     icon: 'https://ingressmm.com/icon/' + json.mission[key].code + '.jpg'
                 });
             }
+            list = list.sort(function (a, b) {
+                if (a.number == b.number) return (a.name > b.name ? 1 : -1);
+                if (a.number === false) return 1;
+                if (b.number === false) return -1;
+                return a.number - b.number;
+            });
         } catch (e) {
             app.loadListCallback(false);
         }

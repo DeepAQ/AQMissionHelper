@@ -185,27 +185,8 @@ var app = {
             list.html('No Result _(:з」∠)_');
             return;
         }
+        app.list = result;
         list.html('');
-        // Smart Sort
-        var getNum = function (name) {
-            name = name.replace(/[\s-]/g, "");
-            var regs = [/[(（\[]*(\d+)[/)）\]]/i, /(\d+)$/i];
-            for (var i in regs) {
-                var matches = name.match(regs[i]);
-                if (matches && matches.length >= 2)
-                    return Number(matches[1]);
-            }
-            return false;
-        };
-        app.list = result.sort(function (a, b) {
-            if (a.number == undefined) a.number = getNum(a.name);
-            if (b.number == undefined) b.number = getNum(b.name);
-            if (a.number == b.number) return (a.name > b.name ? 1 : -1);
-            if (a.number === false) return 1;
-            if (b.number === false) return -1;
-            return a.number - b.number;
-        });
-
         for (var i in app.list) {
             var mission = app.list[i];
             var type = 'Hidden';
@@ -217,13 +198,13 @@ var app = {
                 type = 'Unknown';
             }
             var gcjPos = wgstogcj.transform(mission.lat, mission.lng);
-            var content = '<div class="mission" data-index="' + i + '">\
-                    <img src="' + mission.icon + '" />\
-                    <div>\
-                        <div>' + mission.name + '</div>\
-                        <div>' + type + ' <span class="distance" data-lat="' + gcjPos.lat + '" data-lng="' + gcjPos.lng + '"></span></div>\
-                    </div>\
-                </div>';
+            var content = '<div class="mission" data-index="' + i + '">' +
+                    '<img src="' + mission.icon + '" />' +
+                    '<div>' +
+                        '<div>' + mission.name + '</div>' +
+                        '<div>' + type + ' <span class="distance" data-lat="' + gcjPos.lat + '" data-lng="' + gcjPos.lng + '"></span></div>' +
+                    '</div>' +
+                '</div>';
             list.append(content);
         }
         app.calcDistance();
@@ -272,12 +253,12 @@ var app = {
                     if (gcjPos.lng < minLng) minLng = gcjPos.lng;
                     if (gcjPos.lng > maxLng) maxLng = gcjPos.lng;
 
-                    content = content + '<div>' + task_list[waypoint.task] + '</div>\
-                        <div><span class="distance" data-lat="' + gcjPos.lat + '" data-lng="' + gcjPos.lng + '"></span>\
-                        <a href="https://www.ingress.com/intel?ll=' + waypoint.lat + ',' + waypoint.lng + '" target="_blank">Intel</a>\
-                        <a href="javascript:">Walk</a>\
-                        <a href="javascript:">Drive</a>\
-                        <a href="javascript:">Transit</a></div>';
+                    content = content + '<div>' + task_list[waypoint.task] + '</div>' +
+                        '<div><span class="distance" data-lat="' + gcjPos.lat + '" data-lng="' + gcjPos.lng + '"></span>' +
+                        '<a href="https://www.ingress.com/intel?ll=' + waypoint.lat + ',' + waypoint.lng + '" target="_blank">Intel</a>' +
+                        '<a href="javascript:">Walk</a>' +
+                        '<a href="javascript:">Drive</a>' +
+                        '<a href="javascript:">Transit</a></div>';
 
                     var marker = new AMap.Marker({
                         map: app.map,
