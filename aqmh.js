@@ -64,7 +64,7 @@ var app = {
             app.map.addControl(new AMap.Scale());
         });
         app.switchTab('map');
-        // init geolocation circle
+        // init geolocation
         app.location = {};
         app.location.circle = new AMap.Marker({
             map: app.map,
@@ -78,13 +78,13 @@ var app = {
         app.loadRecent();
         app.loadSaved();
         app.loadTrending();
-        // prepare location
+        // finish initialization
         if (window.location.href.substr(0, 4) == 'http') {
             // online version
             app.datasrc = '.';
             this.onDeviceReady();
         } else {
-            app.datasrc = 'https://ingressmm.com';
+            app.datasrc = 'https://ingressmm.com'; // for compatibility
             document.addEventListener('deviceready', this.onDeviceReady, false);
         }
     },
@@ -93,16 +93,15 @@ var app = {
     onDeviceReady: function () {
         if (window.AMapBridge) {
             // Android client
-            var amapUpdate = function () {
+            setInterval(function () {
                 AMapBridge.getLocation(function (result) {
                     if (!result.lat || !result.lng) return;
                     app.updateLocation(result.lat, result.lng);
                 });
-            };
-            setInterval(amapUpdate, 1000);
+            }, 1000);
         } else {
             // other browsers
-            var geoUpdate = function () {
+            setInterval(function () {
                 navigator.geolocation.getCurrentPosition(function (result) {
                     if (result.coords.accuracy == null) return;
                     var pos = wgstogcj.transform(result.coords.latitude, result.coords.longitude);
@@ -110,8 +109,7 @@ var app = {
                 }, null, {
                     enableHighAccuracy: true
                 });
-            };
-            setInterval(geoUpdate, 1000);
+            }, 1000);
         }
         // Device orientation
         if (navigator.compass) {
@@ -126,7 +124,7 @@ var app = {
         // load versions
         $('#local_ver').load('version.html', function () {
             $('#online_ver').load(app.online_url + '/version.html', function (result) {
-                if (result && result != $('#local_ver').html() && window.AMapBridge) {
+                if (window.AMapBridge && result && result != $('#local_ver').html()) {
                     $('#update').show();
                 }
             });
@@ -165,7 +163,7 @@ var app = {
             app.map.setZoomAndCenter(16, [lng, lat]);
             app.location.firstFix = false;
             $('#skip').hide();
-            setTimeout(app.finishLoading, 2000);
+            setTimeout(app.finishLoading, 1000);
         }
     },
 
@@ -186,7 +184,8 @@ var app = {
             return;
         }
         app.list = result;
-        list.html('');
+
+        var content = '';
         for (var i in app.list) {
             var mission = app.list[i];
             var type = 'Hidden';
@@ -198,15 +197,15 @@ var app = {
                 type = 'Unknown';
             }
             var gcjPos = wgstogcj.transform(mission.lat, mission.lng);
-            var content = '<div class="mission" data-index="' + i + '">' +
-                    '<img src="' + mission.icon + '" />' +
-                    '<div>' +
-                        '<div>' + mission.name + '</div>' +
-                        '<div>' + type + ' <span class="distance" data-lat="' + gcjPos.lat + '" data-lng="' + gcjPos.lng + '"></span></div>' +
-                    '</div>' +
+            content += '<div class="mission" data-index="' + i + '">' +
+                '<img src="' + mission.icon + '" />' +
+                '<div>' +
+                '<div>' + mission.name + '</div>' +
+                '<div>' + type + ' <span class="distance" data-lat="' + gcjPos.lat + '" data-lng="' + gcjPos.lng + '"></span></div>' +
+                '</div>' +
                 '</div>';
-            list.append(content);
         }
+        list.html(content);
         app.calcDistance();
     },
 
@@ -217,7 +216,8 @@ var app = {
 
         var mission = app.list[index];
         app.data[mission.type].getPortals(mission, function (result) {
-            list.html('');
+            var content = '';
+
             if (app.map.markers) {
                 app.map.remove(app.map.markers);
             }
@@ -225,10 +225,10 @@ var app = {
             var minLat = 90, maxLat = -90, minLng = 180, maxLng = -180;
 
             if (!result || result.length == 0) {
-                list.html('Get portals failed _(:з」∠)_');
-            } else for (var i in result) {
+                list.html('Failed to fetch mission detail _(:з」∠)_');
+            } else for (var i = 0; i < result.length; i++) {
                 var waypoint = result[i];
-                var content = '<div class="waypoint"><div>' + (Number(i) + 1) + '. ';
+                content += '<div class="waypoint"><div>' + (i + 1) + '. ';
 
                 var task_list = [
                     "",
@@ -241,25 +241,22 @@ var app = {
                     "View this Field Trip Waypoint",
                     "Enter the Passphrase"
                 ];
-
                 if (waypoint.hidden) {
-                    content = content + 'Waypoint Hidden' + '</div>';
+                    content += 'Waypoint Hidden' + '</div>';
                 } else {
-                    content = content + waypoint.name + '</div>';
-
+                    content += waypoint.name + '</div>';
                     var gcjPos = wgstogcj.transform(waypoint.lat, waypoint.lng);
                     if (gcjPos.lat < minLat) minLat = gcjPos.lat;
                     if (gcjPos.lat > maxLat) maxLat = gcjPos.lat;
                     if (gcjPos.lng < minLng) minLng = gcjPos.lng;
                     if (gcjPos.lng > maxLng) maxLng = gcjPos.lng;
-
-                    content = content + '<div>' + task_list[waypoint.task] + '</div>' +
-                        '<div><span class="distance" data-lat="' + gcjPos.lat + '" data-lng="' + gcjPos.lng + '"></span>' +
-                        '<a href="https://www.ingress.com/intel?ll=' + waypoint.lat + ',' + waypoint.lng + '" target="_blank">Intel</a>' +
-                        '<a href="javascript:">Walk</a>' +
-                        '<a href="javascript:">Drive</a>' +
+                    content += '<div>' + task_list[waypoint.task] + '</div>' +
+                        '<div><span class="distance" data-lat="' + gcjPos.lat + '" data-lng="' + gcjPos.lng + '"></span> ' +
+                        '<a href="https://www.ingress.com/intel?ll=' + waypoint.lat + ',' + waypoint.lng + '" target="_blank">Intel</a> ' +
+                        '<a href="javascript:">Walk</a> ' +
+                        '<a href="javascript:">Ride</a> ' +
+                        '<a href="javascript:">Drive</a> ' +
                         '<a href="javascript:">Transit</a></div>';
-
                     var marker = new AMap.Marker({
                         map: app.map,
                         position: [gcjPos.lng, gcjPos.lat],
@@ -268,9 +265,9 @@ var app = {
                     });
                     app.map.markers.push(marker);
                 }
-                content = content + '</div>';
-                list.append(content);
+                content += '</div>';
             }
+            list.html(content);
 
             var show_map = function () {
                 $('#mission_switch').show().find('span').html(mission.name).parent().attr('data-index', index);
@@ -291,13 +288,14 @@ var app = {
         }
         var search_box = $('#mission_search_box');
         search_box.find('input').val(key);
+        search_box.find('select').val(type);
         key = encodeURIComponent(key);
         location.hash = 'q=' + key + '&qt=' + type;
-        search_box.find('select').val(type);
         app.data[type].search(key);
     },
 
     calcDistance: function () {
+        if (!app.location.lng || !app.location.lat) return;
         $('.distance').each(function () {
             var lat = Number($(this).attr('data-lat'));
             var lng = Number($(this).attr('data-lng'));
@@ -311,14 +309,11 @@ var app = {
         if (!localStorage.recent_search) return;
         try {
             var recent = JSON.parse(localStorage.recent_search);
-            list.html('');
+            var content = '';
             for (var i in recent) {
-                if (recent[i].key) {
-                    list.prepend('<div data-name="' + recent[i].key + '" data-type="' + recent[i].type + '"><a href="javascript:">' + recent[i].key + ' (' + recent[i].type + ')</a></div>');
-                } else {
-                    list.prepend('<div data-name="' + recent[i] + '" data-type="ingressmm"><a href="javascript:">' + recent[i] + ' (ingressmm)</a></div>');
-                }
+                content = '<div data-name="' + recent[i].key + '" data-type="' + recent[i].type + '"><a href="javascript:">' + recent[i].key + ' (' + recent[i].type + ')</a></div>' + content;
             }
+            list.html(content);
         } catch (e) {
         }
     },
@@ -329,14 +324,11 @@ var app = {
         if (!localStorage.saved_search) return;
         try {
             var saved = JSON.parse(localStorage.saved_search);
-            list.html('');
+            var content = '';
             for (var key in saved) {
-                if (saved[key].key) {
-                    list.prepend('<div data-name="' + saved[key].key + '" data-type="' + saved[key].type + '" data-key="' + key + '"><a href="javascript:">' + key + ' (' + saved[key].type + ')</a> <a href="javascript:">[Delete]</a></div>');
-                } else {
-                    list.prepend('<div data-name="' + saved[key] + '" data-type="ingressmm" data-key="' + key + '"><a href="javascript:">' + key + ' (ingressmm)</a> <a href="javascript:">[Delete]</a></div>');
-                }
+                content = '<div data-name="' + saved[key].key + '" data-type="' + saved[key].type + '" data-key="' + key + '"><a href="javascript:">' + key + ' (' + saved[key].type + ')</a> <a href="javascript:">[Delete]</a></div>' + content;
             }
+            list.html(content);
         } catch (e) {
         }
     },
@@ -365,8 +357,7 @@ $(function () {
         var key = $.trim(search_box.find('input').val());
         var type = search_box.find('select').val();
         if (key == '') return;
-        $('#mission_list').show();
-        $('#btn_list_save').show();
+        $('#mission_list, #btn_list_save').show();
         app.performSearch(key, type);
         // save to recent searches
         var data = [];
@@ -426,10 +417,7 @@ $(function () {
             } catch (e) {
             }
         }
-        data[name] = {
-            key: input,
-            type: type
-        };
+        data[name] = {key: input, type: type};
         localStorage.saved_search = JSON.stringify(data);
         app.loadSaved();
     });
@@ -437,18 +425,15 @@ $(function () {
     // init mission list
     $('#btn_list_back').click(function () {
         location.hash = '';
-        $('#btn_list_save').hide();
-        $('#mission_list').hide();
+        $('#btn_list_save, #btn_list_preview, #mission_list').hide();
         $('#mission_suggest').show();
     });
 
     $('#mission_list').on('click', '.mission', function () {
         app.lastScroll = document.body.scrollTop;
         search_box.hide();
-        $('#mission_list').hide();
+        $('#mission_list, #btn_show_map').hide();
         $('#mission_detail').show();
-        $('#btn_show_map').hide();
-
         app.loadMission($(this).attr('data-index'));
     });
 
@@ -480,10 +465,11 @@ $(function () {
         if (app.transport) {
             app.transport.clear();
         }
-        AMap.service(['AMap.Walking', 'AMap.Driving', 'AMap.Transfer'], function () {
+        AMap.service(['AMap.Walking', 'AMap.Riding', 'AMap.Driving', 'AMap.Transfer'], function () {
             var param = {
                 map: app.map,
                 panel: 'route_container',
+                showTraffic: true,
                 city: 'undefined',
                 nightflag: true
             };
@@ -492,7 +478,12 @@ $(function () {
                     app.transport = new AMap.Walking(param);
                     app.switchTab('map');
                     break;
+                case 'Ride':
+                    app.transport = new AMap.Riding(param);
+                    app.switchTab('map');
+                    break;
                 case 'Drive':
+                    param.policy = AMap.DrivingPolicy.REAL_TRAFFIC;
                     app.transport = new AMap.Driving(param);
                     app.switchTab('route');
                     break;
