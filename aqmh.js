@@ -171,7 +171,7 @@ var app = {
         if (!type) {
             type = 'ingressmm';
         }
-        $('#mission_suggest').hide();
+        $('#mission_suggest, #mission_preview, #btn_list_preview').hide();
         $('#mission_list').show();
         $('#mission_list_content').html('Loading ...');
         $.get(url, app.data[type].parseList);
@@ -186,7 +186,7 @@ var app = {
         app.list = result;
 
         var content = '';
-        for (var i in app.list) {
+        for (var i = 0; i < app.list.length; i++) {
             var mission = app.list[i];
             var type = 'Hidden';
             if (mission.seq == 1) {
@@ -198,15 +198,17 @@ var app = {
             }
             var gcjPos = wgstogcj.transform(mission.lat, mission.lng);
             content += '<div class="mission" data-index="' + i + '">' +
-                '<img src="' + mission.icon + '" />' +
-                '<div>' +
-                '<div>' + mission.name + '</div>' +
+                '<img src="' + mission.icon + '">' +
+                '<div><div>' + mission.name + '</div>' +
                 '<div>' + type + ' <span class="distance" data-lat="' + gcjPos.lat + '" data-lng="' + gcjPos.lng + '"></span></div>' +
-                '</div>' +
-                '</div>';
+                '</div></div>';
         }
         list.html(content);
         app.calcDistance();
+
+        if (app.list.length % 6 == 0) {
+            $('#btn_list_preview').show();
+        }
     },
 
     loadMission: function (index, show) {
@@ -404,7 +406,13 @@ $(function () {
         app.loadSaved();
     });
 
-    // init search save
+    // init mission list
+    $('#btn_list_back').click(function () {
+        location.hash = '';
+        $('#btn_list_save, #mission_list').hide();
+        $('#mission_suggest').show();
+    });
+
     $('#btn_list_save').click(function () {
         var input = search_box.find('input').val();
         var type = search_box.find('select').val();
@@ -422,11 +430,14 @@ $(function () {
         app.loadSaved();
     });
 
-    // init mission list
-    $('#btn_list_back').click(function () {
-        location.hash = '';
-        $('#btn_list_save, #btn_list_preview, #mission_list').hide();
-        $('#mission_suggest').show();
+    $('#btn_list_preview').click(function () {
+        $('#mission_list').hide();
+        var content = '';
+        for (var i = 0; i < app.list.length; i++) {
+            content = '<img src="' + app.list[i].icon + '">' + content;
+        }
+        $('#mission_preview_content').html(content);
+        $('#mission_preview').show();
     });
 
     $('#mission_list').on('click', '.mission', function () {
@@ -442,6 +453,21 @@ $(function () {
         if (new_index < 0 || new_index >= app.list.length) return;
         $(this).parent().find('span').html('Loading ...');
         app.loadMission(new_index, true);
+    });
+
+    // init mission preview
+    $('#btn_preview_back').click(function () {
+        $('#mission_preview').hide();
+        $('#mission_list').show();
+    });
+
+    $('#btn_preview_flip').click(function () {
+        var content = '', container = $('#mission_preview_content'),
+            children = container.children();
+        for (var i = 0; i < children.length; i++) {
+            content = children[i].outerHTML + content;
+        }
+        container.html(content);
     });
 
     // init mission detail

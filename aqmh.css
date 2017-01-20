@@ -127,7 +127,7 @@ nav .activate {
     display: none;
 }
 
-#mission_list {
+#mission_list, #mission_preview {
     margin-top: 10px;
 }
 
@@ -179,4 +179,15 @@ nav .activate {
     height: 24px;
     line-height: 24px;
     font-size: 16px;
+}
+
+#mission_preview_content {
+    line-height: 0;
+}
+
+#mission_preview_content img {
+    width: 14.3%;
+    margin: 2% -2px -2px 1.9%;
+    border: #F79E29 solid 1px;
+    border-radius: 50%;
 }
