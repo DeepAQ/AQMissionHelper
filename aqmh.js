@@ -120,15 +120,13 @@ const app = {
             });
         }
         // load versions
-        $('#local_ver').load('version.html')
-            .done(() => {
-                $('#online_ver').load(`${app.online_url}/version.html`)
-                    .done(result => {
-                        if (window.AMapBridge && result && result != $('#local_ver').html()) {
-                            $('#update').show();
-                        }
-                    });
+        $('#local_ver').load('version.html', () => {
+            $('#online_ver').load(app.online_url + '/version.html', result => {
+                if (window.AMapBridge && result && result != $('#local_ver').html()) {
+                    $('#update').show();
+                }
             });
+        });
     },
 
     finishLoading: function () {
@@ -163,7 +161,7 @@ const app = {
             this.map.setZoomAndCenter(16, [lng, lat]);
             this.location.firstFix = false;
             $('#skip').hide();
-            setTimeout(this.finishLoading, 1000);
+            setTimeout(this.finishLoading.bind(this), 1000);
         }
     },
 
