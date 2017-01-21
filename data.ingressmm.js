@@ -10,7 +10,7 @@ app.data.ingressmm = {
             // Smart Sort
             var getNum = function (name) {
                 name = name.replace(/[\s-]/g, "");
-                var regs = [/[(（\[]*(\d+)[/)）\]]/i, /(\d+)$/i];
+                var regs = [/[(（\[【{]*(\d+)[/)）\]】}]/i, /(\d+)$/i];
                 for (var i in regs) {
                     var matches = name.match(regs[i]);
                     if (matches && matches.length >= 2)
