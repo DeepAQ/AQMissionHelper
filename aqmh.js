@@ -64,7 +64,7 @@ const app = {
         // init geolocation
         this.location = {
             circle: new AMap.Marker({
-                map: app.map,
+                map: this.map,
                 offset: new AMap.Pixel(-11.5, -11.5),
                 icon: 'img/loc.png',
                 zIndex: 200,
@@ -121,7 +121,7 @@ const app = {
         }
         // load versions
         $('#local_ver').load('version.html', () => {
-            $('#online_ver').load(app.online_url + '/version.html', result => {
+            $('#online_ver').load(`${this.online_url}/version.html`, result => {
                 if (window.AMapBridge && result && result != $('#local_ver').html()) {
                     $('#update').show();
                 }
@@ -200,7 +200,7 @@ const app = {
                     <img src="${mission.icon}">
                     <div>
                         <div>${mission.name}</div>
-                        <div>${type}<span class="distance" data-lat="${gcjPos.lat}" data-lng="${gcjPos.lng}"></span></div>
+                        <div>${type} <span class="distance" data-lat="${gcjPos.lat}" data-lng="${gcjPos.lng}"></span></div>
                     </div>
                 </div>
             `;
@@ -265,11 +265,15 @@ const app = {
                             <a href="javascript:">Transit</a>
                         </div>
                     `;
+                    let marker_class = 'waypoint_marker';
+                    if (waypoint.task != 1 && waypoint.task != 7) {
+                        marker_class += ' waypoint_marker_red';
+                    }
                     this.map.markers.push(new AMap.Marker({
                         map: this.map,
                         position: [gcjPos.lng, gcjPos.lat],
                         offset: new AMap.Pixel(-12, -12),
-                        content: `<div class="waypoint_marker">${(Number(i) + 1)}</div>`
+                        content: `<div class="${marker_class}">${i + 1}</div>`
                     }));
                 }
                 content += '</div>';

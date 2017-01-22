@@ -181,6 +181,10 @@ nav .activate {
     font-size: 16px;
 }
 
+.waypoint_marker_red {
+    color: #EF5350;
+}
+
 #mission_preview_content {
     line-height: 0;
 }
