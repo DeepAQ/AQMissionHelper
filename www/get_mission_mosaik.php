@@ -19,8 +19,10 @@ if (preg_match_all('/mosaic\/(\d+)"/', $search, $a)) {
             break;
         }
         $mosaic = @file_get_contents('https://ingressmosaik.com/mosaic/' . $mosaic_id);
-        if (preg_match('/\{"id":(.+);.*function infoHide/s', $mosaic, $b)) {
-            $result[] = '[0,0,0,{"id":' . $b[1]; //str_replace("'", '"', $b[1]);
+        if (strpos($mosaic, '<tr style="color:red">') === false) {
+            if (preg_match('/\{"id":(.+);.*function infoHide/s', $mosaic, $b)) {
+                $result[] = '[0,0,0,{"id":' . $b[1]; //str_replace("'", '"', $b[1]);
+            }
         }
     }
 }
