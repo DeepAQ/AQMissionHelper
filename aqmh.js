@@ -255,9 +255,11 @@ const app = {
                     if (gcjPos.lng < minLng) minLng = gcjPos.lng;
                     if (gcjPos.lng > maxLng) maxLng = gcjPos.lng;
                     content += `
-                        <div>${task_list[waypoint.task]}</div>
                         <div>
                             <span class="distance" data-lat="${gcjPos.lat}" data-lng="${gcjPos.lng}"></span>
+                            ${task_list[waypoint.task]}
+                        </div>
+                        <div>
                             <a href="https://www.ingress.com/intel?ll=${waypoint.lat},${waypoint.lng}" target="_blank">Intel</a>
                             <a href="javascript:">Walk</a>
                             <a href="javascript:">Ride</a>
@@ -531,7 +533,7 @@ $(() => {
                     app.switchTab('route');
                     break;
             }
-            const target = $(this).parent().find('.distance');
+            const target = $(this).parent().parent().find('.distance');
             app.transport.search([app.location.lng, app.location.lat],
                 [Number(target.attr('data-lng')), Number(target.attr('data-lat'))],
                 (status, result) => {
