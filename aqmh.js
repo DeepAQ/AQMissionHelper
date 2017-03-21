@@ -94,7 +94,7 @@ const app = {
             setInterval(() => {
                 AMapBridge.getLocation(result => {
                     if (!result.lat || !result.lng) return;
-                    this.updateLocation(result.lat, result.lng);
+                    app.updateLocation(result.lat, result.lng);
                 });
             }, 1000);
         } else {
@@ -103,7 +103,7 @@ const app = {
                 navigator.geolocation.getCurrentPosition(result => {
                     if (result.coords.accuracy == null) return;
                     const pos = wgstogcj.transform(result.coords.latitude, result.coords.longitude);
-                    this.updateLocation(pos.lat, pos.lng);
+                    app.updateLocation(pos.lat, pos.lng);
                 }, null, {
                     enableHighAccuracy: true
                 });
@@ -111,17 +111,17 @@ const app = {
         }
         // Device orientation
         if (navigator.compass) {
-            this.location.circle.setIcon('img/loc_o.png');
-            this.location.circle.setOffset(new AMap.Pixel(-11.5, -13.5));
+            app.location.circle.setIcon('img/loc_o.png');
+            app.location.circle.setOffset(new AMap.Pixel(-11.5, -13.5));
             navigator.compass.watchHeading((heading) => {
-                this.location.circle.setAngle(heading.magneticHeading);
+                app.location.circle.setAngle(heading.magneticHeading);
             }, null, {
                 frequency: 100
             });
         }
         // load versions
         $('#local_ver').load('version.html', () => {
-            $('#online_ver').load(`${this.online_url}/version.html`, result => {
+            $('#online_ver').load(`${app.online_url}/version.html`, result => {
                 if (window.AMapBridge && result && result != $('#local_ver').html()) {
                     $('#update').show();
                 }
