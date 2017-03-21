@@ -374,18 +374,19 @@ $(() => {
         app.performSearch(key, type);
         // save to recent searches
         let data = [];
+        const search = {key: key, type: type};
         if (localStorage.recent_search) {
+            if (localStorage.recent_search.indexOf(JSON.stringify(search)) != -1) {
+                return;
+            }
             try {
                 data = JSON.parse(localStorage.recent_search);
             } catch (e) {
             }
         }
-        const search = {key: key, type: type};
-        if (localStorage.recent_search.indexOf(JSON.stringify(search)) == -1) {
-            data.push(search);
-            while (data.length > 5) {
-                data.shift();
-            }
+        data.push(search);
+        while (data.length > 5) {
+            data.shift();
         }
         localStorage.recent_search = JSON.stringify(data);
         app.loadRecent();
